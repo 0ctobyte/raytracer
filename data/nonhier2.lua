@@ -43,14 +43,8 @@ require('smstdodeca')
 steldodec:set_material(mat3)
 scene:add_child(steldodec)
 
-l1_radius = 2500.0
-l2_radius = 2500.0
-
-l1_attenuation = {1.0, 2.0/l1_radius, 1.0/(l1_radius*l1_radius)}
-l2_attenuation = {1.0, 2.0/l2_radius, 1.0/(l2_radius*l2_radius)}
-
-white_light = gr.light({-100.0, 150.0, 400.0}, {0.9, 0.9, 0.9}, l1_attenuation)
-orange_light = gr.light({400.0, 100.0, 150.0}, {0.7, 0.0, 0.7}, l2_attenuation)
+white_light = gr.light({-100.0, 150.0, 400.0}, {0.9, 0.9, 0.9}, {1, 0, 0})
+orange_light = gr.light({400.0, 100.0, 150.0}, {0.7, 0.0, 0.7}, {1, 0, 0})
 
 gr.render(scene, 'nonhier.png', 256, 256,
 	  {0, 0, 800}, {0, 0, -1}, {0, 1, 0}, 50,

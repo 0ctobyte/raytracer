@@ -85,15 +85,8 @@ scene:add_child(poly)
 poly:translate(-2, 1.618034, 0)
 poly:set_material(blue)
 
--- The lights
-l1_radius = 2500.0
-l2_radius = 2500.0
-
-l1_attenuation = {1.0, 2.0/l1_radius, 1.0/(l1_radius*l1_radius)}
-l2_attenuation = {1.0, 2.0/l2_radius, 1.0/(l2_radius*l2_radius)}
-
-l1 = gr.light({200,200,400}, {0.8, 0.8, 0.8}, l1_attenuation) --{1, 0, 0})
-l2 = gr.light({0, 5, -20}, {0.4, 0.4, 0.8}, l2_attenuation) --{1, 0, 0})
+l1 = gr.light({200,200,400}, {0.8, 0.8, 0.8}, {1, 0, 0})
+l2 = gr.light({0, 5, -20}, {0.4, 0.4, 0.8}, {1, 0, 0})
 
 gr.render(scene, 'hier.png', 512, 512, 
 	  {0, 0, 0,}, {0, 0, -1}, {0, 1, 0}, 50,

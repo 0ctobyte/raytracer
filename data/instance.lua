@@ -64,12 +64,8 @@ for i = 1,6 do
    an_arc:add_child(arc)
 end
 
-l1_radius = 2500.0
-
-l1_attenuation = {1.0, 2.0/l1_radius, 1.0/(l1_radius*l1_radius)}
-
 -- render it!
 gr.render(scene,
 	  'instance.png', 256, 256,
 	  {0, 2, 30}, {0, 0, -1}, {0, 1, 0}, 50,
-	  {0.4, 0.4, 0.4}, {gr.light({200, 202, 430}, {0.8, 0.8, 0.8}, l1_attenuation)})
+	  {0.4, 0.4, 0.4}, {gr.light({200, 202, 430}, {0.8, 0.8, 0.8}, {1, 0, 0})})

@@ -264,11 +264,7 @@ icosa:scale(2.0, 2.0, 2.0)
 
 rootnode:translate(0.0, 2.0, -20.0)
 
-l1_radius = 2500.0
-
-l1_attenuation = {1.0, 2.0/l1_radius, 1.0/(l1_radius*l1_radius)}
-
-white_light = gr.light({-100.0, 150.0, 100.0}, {0.9, 0.9, 0.9}, l1_attenuation)
+white_light = gr.light({-100.0, 150.0, 100.0}, {0.9, 0.9, 0.9}, {1, 0, 0})
 
 gr.render(rootnode, 'puppet.png', 512, 512,
 	  {0, 0, 10.0}, {0, 0, -1}, {0, 1, 0}, 50,
