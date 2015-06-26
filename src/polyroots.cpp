@@ -144,7 +144,7 @@ size_t quadraticRoots( double A, double B, double C, double roots[2] )
 /* Coefficients :   x^3  + C[0] x^2 + C[1] x  + C[2] */
 size_t cubicRoots( double p, double q, double r, double roots[3] )
 {
-  register double u, v, w, s, t, cosk, sink, p_over_3, k;
+  double u, v, w, s, t, cosk, sink, p_over_3, k;
   /* int i; */
 
   u = q - p*p/3.0;
@@ -356,8 +356,8 @@ static double PolishRoot(
 #ifdef TABLE_LOOKUP
 static double cosk_lookup(double t)
 {
-  register int it;
-  register double tprime, low, high, u, v;
+  int it;
+  double tprime, low, high, u, v;
   static double table[1025] = {	/* Precalculated table of cos( arccos(t)/3 ) */
     0.500000000000,0.517935289657,0.525302996762,0.530932683914,0.535662933895,
     0.539818532924,0.543566035609,0.547004373987,0.550198001933,0.553191685247,
@@ -589,8 +589,8 @@ static double cosk_lookup(double t)
 
 static double sink_lookup(double t)
 {
-  register int it;
-  register double tprime, low, high,u, v;
+  int it;
+  double tprime, low, high,u, v;
   static double table[1025] = {	/* Precalculated table of sin( arccos(t)/3 ) */
     0.866025403784,0.855419800875,0.850915249360,0.847413998676,0.844431892606,
     0.841781415518,0.839366406841,0.837129747912,0.835034226047,0.833053995473,
