@@ -111,7 +111,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light
       Intersection u;
       
       // Make sure to check if intersection point is before light source
-      if(root->intersect(shadow, u)) continue;
+      if(root->intersect(shadow, u) && (u.q-shadow.origin()).length() < (light->position-shadow.origin()).length()) continue;
 
       // Perform phong shading at intersection point. The ambient factor is essentially 1 / number of lights.
       // This is so that the ambient light is not added to the final colour multiple times (one time for each light source)
