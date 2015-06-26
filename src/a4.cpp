@@ -1,8 +1,21 @@
 #include "a4.hpp"
 #include "image.hpp"
 
+#include <pthread.h>
 #include <cmath>
 #include <algorithm>
+
+struct RenderThreadData {
+  Image& img;
+  int ystart, yskip, width, height;
+  SceneNode* root;
+  Matrix4x4 unproject;
+  Point3D eye;
+  Colour ambient;
+  std::list<Light*> lights;
+  int* progress;
+  bool* done;
+};
 
 Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, Point3D eye, Vector3D view, Vector3D up)
 {
@@ -113,6 +126,46 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const Light* light, c
   return colour;
 }
 
+void* a4_render_thread(void* data)
+{
+  RenderThreadData d = *static_cast<RenderThreadData*>(data);
+
+  int one_percent = d.width * d.height * 0.01;
+  int pixel_count = 0, percentage = 0;
+
+  for (int y = d.ystart; y < d.height; y += d.yskip) {
+    for (int x = 0; x < d.width; x++) {
+      // Unproject the pixel to the projection plane
+      Point3D pixel (x, y, 0.0);
+      Point3D p = d.unproject * pixel;
+
+      // Create the ray with origin at the eye point
+      Ray ray(d.eye, p-d.eye);
+
+      // Background colour. a4_trace_ray returns this if no intersections
+      Colour bg = ((x+y) & 0x10) ? (double)y/d.height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
+
+      // Cast rays for each light that is in the scene
+      // Accumulate the colours returned
+      Colour colour(0.0, 0.0, 0.0);
+      for(auto light : d.lights) colour = colour + a4_trace_ray(ray, d.root, light, d.ambient, bg, 1);
+      
+      d.img(x, y, 0) = colour.R();
+      d.img(x, y, 1) = colour.G();
+      d.img(x, y, 2) = colour.B();
+
+      if(++pixel_count >= one_percent)
+      {
+        pixel_count = 0;
+        *d.progress = ++percentage;
+      }
+    }
+  }
+  *d.done = true;
+
+  return NULL;
+}
+
 void a4_render(// What to render
                SceneNode* root,
                // Where to output the image
@@ -144,43 +197,55 @@ void a4_render(// What to render
   double d = view.length();
   Matrix4x4 unproject = a4_get_unproject_matrix(width, height, fov, d, eye, view, up);
     
-  // For now, just make a sample image.
-
   Image img(width, height, 3);
 
-  int one_percent = width*height*0.01;
-  int pixel_count = 0, percentage = 0;
+  int progress1 = 0, progress2 = 0, progress3 = 0, progress4 = 0;
+  bool done1 = false, done2 = false, done3 = false, done4 = false;
+  RenderThreadData data1 = {img, 0, 4, width, height, root, unproject, eye, ambient, lights, &progress1, &done1};
+  RenderThreadData data2 = {img, 1, 4, width, height, root, unproject, eye, ambient, lights, &progress2, &done2};
+  RenderThreadData data3 = {img, 2, 4, width, height, root, unproject, eye, ambient, lights, &progress3, &done3};
+  RenderThreadData data4 = {img, 3, 4, width, height, root, unproject, eye, ambient, lights, &progress4, &done4};
 
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      // Unproject the pixel to the projection plane
-      Point3D pixel (x, y, 0.0);
-      Point3D p = unproject * pixel;
+  pthread_t t1, t2, t3, t4;
 
-      // Create the ray with origin at the eye point
-      Ray ray(eye, p-eye);
-
-      // Background colour. a4_trace_ray returns this if no intersections
-      Colour bg = ((x+y) & 0x10) ? (double)y/height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
-
-      // Cast rays for each light that is in the scene
-      // Accumulate the colours returned
-      Colour colour(0.0, 0.0, 0.0);
-      for(auto light : lights) colour = colour + a4_trace_ray(ray, root, light, ambient, bg, 1);
-      
-      img(x, y, 0) = colour.R();
-      img(x, y, 1) = colour.G();
-      img(x, y, 2) = colour.B();
-
-      if(++pixel_count >= one_percent)
-      {
-        pixel_count = 0;
-        std::cout << "progress: " << ++percentage << "% \r" << std::flush;
-      }
-    }
+  int ret = pthread_create(&t1, NULL, a4_render_thread, &data1);
+  if(ret)
+  {
+    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
+    exit(EXIT_FAILURE);
   }
-    
+
+  ret = pthread_create(&t2, NULL, a4_render_thread, &data2);
+  if(ret)
+  {
+    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  ret = pthread_create(&t3, NULL, a4_render_thread, &data3);
+  if(ret)
+  {
+    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  ret = pthread_create(&t4, NULL, a4_render_thread, &data4);
+  if(ret)
+  {
+    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
+    exit(EXIT_FAILURE);
+  }
+
+  while(!done1 || !done2 || !done3 || !done4)
+  {
+    std::cout << "progress: " << progress1+progress2+progress3+progress4 << "% \r" << std::flush;
+  }
   std::cout << std::endl;
+  
+  pthread_join(t1, NULL);
+  pthread_join(t2, NULL);
+  pthread_join(t3, NULL);
+  pthread_join(t4, NULL);
 
   img.savePng(filename);
   
