@@ -96,43 +96,91 @@ bool NonhierBox::intersect(const Ray& ray, Intersection& j) const
     {Point3D(x, y, z+r), Point3D(x, y+r, z+r), Point3D(x+r, y+r, z+r), Point3D(x+r, y, z+r)},
     {Point3D(x, y, z), Point3D(x, y, z+r), Point3D(x+r, y, z+r), Point3D(x+r, y, z)}
   };
-  Vector3D fn[6] = {
-    (fp[0][2]-fp[0][0]).cross(fp[0][1]-fp[0][0]).normalized(),
-    (fp[1][2]-fp[1][0]).cross(fp[1][1]-fp[1][0]).normalized(),
-    (fp[2][2]-fp[2][0]).cross(fp[2][1]-fp[2][0]).normalized(),
-    (fp[3][2]-fp[3][0]).cross(fp[3][1]-fp[3][0]).normalized(),
-    (fp[4][2]-fp[4][0]).cross(fp[4][1]-fp[4][0]).normalized(),
-    (fp[5][2]-fp[5][0]).cross(fp[5][1]-fp[5][0]).normalized(),
-  };
 
-  // This works similar to polygon intersection where we find the parameter t
-  // which gives the intersection point of the ray with the plane containing the
-  // face. We then check if the point is "inside" each of the edges of the face
+  double epsilon = std::numeric_limits<double>::epsilon();
   double prev_t = std::numeric_limits<double>::infinity();
   bool intersection = false;
   for(int i = 0; i < 6; i++)
   {
-    double den = fn[i].dot(ray.direction());
-    if(fabs(den) < std::numeric_limits<double>::epsilon()) continue;
+    // Calculate the normal vector for the plane containing this face
+    Vector3D fn = (fp[i][2]-fp[i][0]).cross(fp[i][1]-fp[i][0]).normalized();
 
-    double t = (fp[i][0] - ray.origin()).dot(fn[i]) / den;
-    if(t < 0) continue;
+    // If this is 0, then the ray is parallel or lies completely within the plane. Reject it
+    double den = fn.dot(ray.direction());
+    if(fabs(den) < epsilon) continue;
 
-    if(prev_t < t) continue;
+    // Calculate the intersection parameter t
+    double t = (fp[i][0] - ray.origin()).dot(fn) / den;
+
+    // If t < 0 then the intersection point is behind the ray's origin. Reject it
+    // Reject it if it is also further away then a previous intersection with another face
+    if(t < 0 || prev_t < t) continue;
 
     Point3D Q = ray.origin() + t*ray.direction();
 
-    // The cross product of the two vectors should give a vector that is in a similar direction to
-    // the normal of the face
-    if((fp[i][0]-fp[i][1]).cross(Q-fp[i][1]).dot(fn[i]) < 0) continue;
-    if((fp[i][1]-fp[i][2]).cross(Q-fp[i][2]).dot(fn[i]) < 0) continue;
-    if((fp[i][2]-fp[i][3]).cross(Q-fp[i][3]).dot(fn[i]) < 0) continue;
-    if((fp[i][3]-fp[i][0]).cross(Q-fp[i][0]).dot(fn[i]) < 0) continue;
+    // It makes it easier to check if the intersection point is inside the face when both
+    // the face and the intersection point are projected on to the 2D plane. The 2D plane
+    // shall be the plane corresponding to dropping the largest coordinate of the normal vector
+    // This prevents the polygon being projected into a line on the 2D plane
+    int i1 = 0, i2 = 0;
+    if(fabs(fn[2]) > fabs(fn[0]) && fabs(fn[2]) > fabs(fn[1]))
+    {
+      i1 = 0;
+      i2 = 1;
+    }
+    else if(fabs(fn[1]) > fabs(fn[0]))
+    {
+      i1 = 0;
+      i2 = 2;
+    }
+    else
+    {
+      i1 = 1;
+      i2 = 2;
+    }
 
-    prev_t = t;
-    intersection = true;
-    j.q = Q;
-    j.n = fn[i];
+    // Now for each edge, project the points to the 2D plane and translate the points such that the intersection point
+    // is centered on the origin. We then shoot a "ray" in the positive u (or x) axis and count the number of times
+    // this ray intersects with an edge. If even, then the intersection point is outside the face, otherwise it is inside
+    int edge_crossings = 0;
+    for(int j = 0; j < 4; j++)
+    {
+      Point3D P0 = (j == 0) ? Point3D(fp[i][3][i1]-Q[i1], fp[i][3][i2]-Q[i2], 0.0) : Point3D(fp[i][j-1][i1]-Q[i1], fp[i][j-1][i2]-Q[i2], 0.0);
+      Point3D P1 = Point3D(fp[i][j][i1]-Q[i1], fp[i][j][i2]-Q[i2], 0.0);
+
+      // 1 if positive, 0 otherwise
+      int sign0 = (P0[1] >= 0) ? 1 : 0;
+      int sign1 = (P1[1] >= 0) ? 1 : 0;
+
+      // If both of the v coordinates have the same sign, then the edge definitely doesn't cross the positive u axis
+      if(sign0 == sign1) continue;
+
+      // If both the u coordinates is leq to 0, then the edge definitely doesn't cross the ray on the positive u axis
+      if(P0[0] <= 0 && P1[0] <= 0) continue;
+
+      // If both the u coordinates are greather than 0, then the edge definitely crosses the positive u axis
+      if(P0[0] > epsilon && P1[0] > epsilon) {
+        edge_crossings++;
+      }
+      else
+      {
+        // Otherwise the edge may or may not cross the positive u axis. We must calculate the intersection point
+        // We know that the v coordinate of the intersection point must be 0. We just have to check the u coordinate
+        // and see if it is greater than 0
+        double s = (-P0[1]) / (P1[1] - P0[1]);
+        double u = P0[0] + s * (P1[0] - P0[0]);
+        if(u > epsilon) edge_crossings++;
+      }
+    }
+
+    // Check if the number of edge crossings is even
+    if(edge_crossings & 0x1)
+    {
+      intersection = true;
+      prev_t = t;
+      j.q = Q;
+      j.n = fn;
+    }
   }
 
   return intersection;
