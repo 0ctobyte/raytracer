@@ -358,9 +358,12 @@ int gr_render_cmd(lua_State* L)
     lua_pop(L, 1);
   }
 
+  unsigned int reflection_level = luaL_optnumber(L, 11, 0);
+  unsigned int aa_samples = luaL_optnumber(L, 12, 0); 
+
   a4_render(root->node, filename, width, height,
             eye, view, up, fov,
-            ambient, lights);
+            ambient, lights, reflection_level, aa_samples);
   
   return 0;
 }

@@ -13,6 +13,7 @@ struct RenderThreadData {
   Point3D eye;
   Colour ambient;
   std::list<Light*> lights;
+  unsigned int reflection_level, aa_samples;
   int* progress;
   bool* done;
 };
@@ -86,7 +87,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
   return attenuation * (diffuse + specular);
 }
 
-Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, int recurse_level)
+Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int samples)
 {
   // Test intersection of ray with scene for each light source
   Colour colour = bg;
@@ -123,7 +124,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light
     if(recurse_level > 0) 
     {
       Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(i.n)*i.n);
-      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level);
+      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, samples);
     }
 
     // Add the reflection. A coefficient is multiplied with the colour to damp the saturation due to multiple light sources
@@ -154,7 +155,7 @@ void* a4_render_thread(void* data)
 
       // Cast a ray into the scene and get the colour returned
       Colour colour(0.0, 0.0, 0.0);
-      colour = a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, 1);
+      colour = a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, d.reflection_level, d.aa_samples);
       
       d.img(x, y, 0) = colour.R();
       d.img(x, y, 1) = colour.G();
@@ -183,7 +184,10 @@ void a4_render(// What to render
                const Vector3D& up, double fov,
                // Lighting parameters
                const Colour& ambient,
-               const std::list<Light*>& lights
+               const std::list<Light*>& lights,
+               // Optional parameters: Reflection recursive level, antialiasing samples
+               unsigned int reflection_level,
+               unsigned int aa_samples
                )
 {
   // Fill in raytracing code here.
@@ -207,10 +211,10 @@ void a4_render(// What to render
 
   int progress1 = 0, progress2 = 0, progress3 = 0, progress4 = 0;
   bool done1 = false, done2 = false, done3 = false, done4 = false;
-  RenderThreadData data1 = {img, 0, 4, width, height, root, unproject, eye, ambient, lights, &progress1, &done1};
-  RenderThreadData data2 = {img, 1, 4, width, height, root, unproject, eye, ambient, lights, &progress2, &done2};
-  RenderThreadData data3 = {img, 2, 4, width, height, root, unproject, eye, ambient, lights, &progress3, &done3};
-  RenderThreadData data4 = {img, 3, 4, width, height, root, unproject, eye, ambient, lights, &progress4, &done4};
+  RenderThreadData data1 = {img, 0, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress1, &done1};
+  RenderThreadData data2 = {img, 1, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress2, &done2};
+  RenderThreadData data3 = {img, 2, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress3, &done3};
+  RenderThreadData data4 = {img, 3, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress4, &done4};
 
   pthread_t t1, t2, t3, t4;
 

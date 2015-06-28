@@ -17,7 +17,10 @@ void a4_render(// What to render
                const Vector3D& up, double fov,
                // Lighting parameters
                const Colour& ambient,
-               const std::list<Light*>& lights
+               const std::list<Light*>& lights,
+               // Optional parameters: Reflection recursive level, antialiasing samples
+               unsigned int reflection_level,
+               unsigned int aa_samples
                );
 
 #endif
