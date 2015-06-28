@@ -85,104 +85,101 @@ NonhierBox::~NonhierBox()
 
 bool NonhierBox::intersect(const Ray& ray, Intersection& j) const
 {
-  // This algorithm is kinda inefficient but it fucking works so whatevs
-  // First gather the points and normals for all faces
-  double x = m_pos[0], y = m_pos[1], z = m_pos[2], r = m_size;
-  Point3D fp[6][4] = {
-    {Point3D(x, y, z), Point3D(x+r, y, z), Point3D(x+r, y+r, z), Point3D(x, y+r, z)},
-    {Point3D(x, y+r, z), Point3D(x+r, y+r, z), Point3D(x+r, y+r, z+r), Point3D(x, y+r, z+r)},
-    {Point3D(x+r, y, z), Point3D(x+r, y, z+r), Point3D(x+r, y+r, z+r), Point3D(x+r, y+r, z)},
-    {Point3D(x, y, z), Point3D(x, y+r, z), Point3D(x, y+r, z+r), Point3D(x, y, z+r)},
-    {Point3D(x, y, z+r), Point3D(x, y+r, z+r), Point3D(x+r, y+r, z+r), Point3D(x+r, y, z+r)},
-    {Point3D(x, y, z), Point3D(x, y, z+r), Point3D(x+r, y, z+r), Point3D(x+r, y, z)}
-  };
+  Vector3D r_dir(1.0 / ray.direction()[0], 1.0 / ray.direction()[1], 1.0 / ray.direction()[2]);
+  Point3D bmin(m_pos);
+  Point3D bmax(m_pos[0]+m_size, m_pos[1]+m_size, m_pos[2]+m_size);
 
-  double epsilon = std::numeric_limits<double>::epsilon();
-  double prev_t = std::numeric_limits<double>::infinity();
-  bool intersection = false;
-  for(int i = 0; i < 6; i++)
+  // Get the intersection interval for the near and far x planes
+  double tmin = (bmin[0] - ray.origin()[0]) * r_dir[0];
+  double tmax = (bmax[0] - ray.origin()[0]) * r_dir[0];
+  Vector3D nmin(-1.0, 0.0, 0.0);
+  Vector3D nmax(1.0, 0.0, 0.0);
+
+  // Swap if txmax is closer than txmin
+  if(tmax < tmin)
   {
-    // Calculate the normal vector for the plane containing this face
-    Vector3D fn = (fp[i][2]-fp[i][0]).cross(fp[i][1]-fp[i][0]).normalized();
-
-    // If this is 0, then the ray is parallel or lies completely within the plane. Reject it
-    double den = fn.dot(ray.direction());
-    if(fabs(den) < epsilon) continue;
-
-    // Calculate the intersection parameter t
-    double t = (fp[i][0] - ray.origin()).dot(fn) / den;
-
-    // If t < 0 then the intersection point is behind the ray's origin. Reject it
-    // Reject it if it is also further away then a previous intersection with another face
-    if(t < 0 || prev_t < t) continue;
-
-    Point3D Q = ray.origin() + t*ray.direction();
-
-    // It makes it easier to check if the intersection point is inside the face when both
-    // the face and the intersection point are projected on to the 2D plane. The 2D plane
-    // shall be the plane corresponding to dropping the largest coordinate of the normal vector
-    // This prevents the polygon being projected into a line on the 2D plane
-    int i1 = 0, i2 = 0;
-    if(fabs(fn[2]) > fabs(fn[0]) && fabs(fn[2]) > fabs(fn[1]))
-    {
-      i1 = 0;
-      i2 = 1;
-    }
-    else if(fabs(fn[1]) > fabs(fn[0]))
-    {
-      i1 = 0;
-      i2 = 2;
-    }
-    else
-    {
-      i1 = 1;
-      i2 = 2;
-    }
-
-    // Now for each edge, project the points to the 2D plane and translate the points such that the intersection point
-    // is centered on the origin. We then shoot a "ray" in the positive u (or x) axis and count the number of times
-    // this ray intersects with an edge. If even, then the intersection point is outside the face, otherwise it is inside
-    int edge_crossings = 0;
-    for(int j = 0; j < 4; j++)
-    {
-      Point3D P0 = (j == 0) ? Point3D(fp[i][3][i1]-Q[i1], fp[i][3][i2]-Q[i2], 0.0) : Point3D(fp[i][j-1][i1]-Q[i1], fp[i][j-1][i2]-Q[i2], 0.0);
-      Point3D P1 = Point3D(fp[i][j][i1]-Q[i1], fp[i][j][i2]-Q[i2], 0.0);
-
-      // 1 if positive, 0 otherwise
-      int sign0 = (P0[1] >= 0) ? 1 : 0;
-      int sign1 = (P1[1] >= 0) ? 1 : 0;
-
-      // If both of the v coordinates have the same sign, then the edge definitely doesn't cross the positive u axis
-      if(sign0 == sign1) continue;
-
-      // If both the u coordinates is leq to 0, then the edge definitely doesn't cross the ray on the positive u axis
-      if(P0[0] <= 0 && P1[0] <= 0) continue;
-
-      // If both the u coordinates are greather than 0, then the edge definitely crosses the positive u axis
-      if(P0[0] > epsilon && P1[0] > epsilon) {
-        edge_crossings++;
-      }
-      else
-      {
-        // Otherwise the edge may or may not cross the positive u axis. We must calculate the intersection point
-        // We know that the v coordinate of the intersection point must be 0. We just have to check the u coordinate
-        // and see if it is greater than 0
-        double s = (-P0[1]) / (P1[1] - P0[1]);
-        double u = P0[0] + s * (P1[0] - P0[0]);
-        if(u > epsilon) edge_crossings++;
-      }
-    }
-
-    // Check if the number of edge crossings is even
-    if(edge_crossings & 0x1)
-    {
-      intersection = true;
-      prev_t = t;
-      j.q = Q;
-      j.n = fn;
-    }
+    std::swap<double>(tmin, tmax);
+    nmin = Vector3D(1.0, 0.0, 0.0);
+    nmax = Vector3D(-1.0, 0.0, 0.0);
   }
 
-  return intersection;
+  // Get the intersection interval for the near and far y planes
+  double tymin = (bmin[1] - ray.origin()[1]) * r_dir[1];
+  double tymax = (bmax[1] - ray.origin()[1]) * r_dir[1];
+  Vector3D nymin(0.0, -1.0, 0.0);
+  Vector3D nymax(0.0, 1.0, 0.0);
+
+  // Swap if tymax is closer than tymin
+  if(tymax < tymin) 
+  {
+    std::swap<double>(tymin, tymax);
+    nymin = Vector3D(0.0, 1.0, 0.0);
+    nymax = Vector3D(0.0, -1.0, 0.0);
+  }
+
+  // Now if the intervals don't overlap then the ray does not intersect at all
+  if(tmax < tymin || tymax < tmin) return false;
+
+  // Now tmin is the max of tmin and tymin (i.e. the interval is closer to the true intersection point)
+  if(tymin > tmin)
+  {
+    tmin = tymin;
+    nmin = nymin; 
+  }
+
+  // tmax is the min of tmax and tymax
+  if(tymax < tmax)
+  {
+    tmax = tymax;
+    nmax = nymax;
+  }
+
+  // Get the intersection interval for the near and far z planes
+  double tzmin = (bmin[2] - ray.origin()[2]) * r_dir[2];
+  double tzmax = (bmax[2] - ray.origin()[2]) * r_dir[2];
+  Vector3D nzmin(0.0, 0.0, -1.0);
+  Vector3D nzmax(0.0, 0.0, 1.0);
+
+  // Swap if tzmax is closer than tzmin
+  if(tzmax < tzmin)
+  {
+    std::swap<double>(tzmin, tzmax);
+    nzmin = Vector3D(0.0, 0.0, 1.0);
+    nzmax = Vector3D(0.0, 0.0, -1.0);
+  }
+
+  // If the intervals don't overlap, well the ray doesn't intersect at all
+  if(tmax < tzmin || tzmax < tmin) return false;
+
+  // Take the max of the two min intersection intervals
+  if(tzmin > tmin)
+  {
+    tmin = tzmin;
+    nmin = nzmin;
+  }
+
+  // Take the min of the two max intersection intervals
+  if(tzmax < tmax)
+  {
+    tmax = tzmax;
+    nmax = nzmax;
+  }
+
+  // Check if both intersection distances are less than 0. The intersection point is then behind the ray's origin
+  // If only tmin is less than 0, then the ray originates from within the box and we take tmax as the intersection interval
+  double t = tmin;
+  Vector3D n = nmin;
+  if(tmin < 0)
+  {
+    t = tmax;
+    n = nmax;
+  }
+  
+  if(t < 0) return false;
+
+  j.q = ray.origin() + t * ray.direction();
+  j.n = n;
+
+  return true;
 }
 
