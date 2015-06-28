@@ -2,6 +2,7 @@
 #include "image.hpp"
 
 #include <pthread.h>
+#include <cstdlib>
 #include <cmath>
 #include <algorithm>
 
@@ -141,22 +142,36 @@ void* a4_render_thread(void* data)
   int one_percent = d.width * d.height * 0.01;
   int pixel_count = 0, percentage = 0;
 
+  int samples = (d.aa_samples == 0) ? 1 : d.aa_samples;
   for (int y = d.ystart; y < d.height; y += d.yskip) {
     for (int x = 0; x < d.width; x++) {
-      // Unproject the pixel to the projection plane
-      Point3D pixel (x, y, 0.0);
-      Point3D p = d.unproject * pixel;
-
-      // Create the ray with origin at the eye point
-      Ray ray(d.eye, p-d.eye);
-
       // Background colour. a4_trace_ray returns this if no intersections
       Colour bg = ((x+y) & 0x10) ? (double)y/d.height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
 
       // Cast a ray into the scene and get the colour returned
       Colour colour(0.0, 0.0, 0.0);
-      colour = a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, d.reflection_level, d.aa_samples);
-      
+
+      // For antialiasing, divide the "pixel" into a n by n grid and cast rays from a random point within each grid box
+      for(int p = 0; p < samples; p++)
+      {
+        for(int q = 0; q < samples; q++)
+        {
+          // Unproject the pixel to the projection plane
+          double e = rand() / RAND_MAX;
+          Point3D pixel ((double)x + ((double)p + e) / (double)samples, (double)y - ((double)q + e) / (double)samples, 0.0);
+          Point3D p = d.unproject * pixel;
+
+          // Create the ray with origin at the eye point
+          Ray ray(d.eye, p-d.eye);
+
+          colour = colour + a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, d.reflection_level, d.aa_samples);
+        }
+      }
+
+      // Of course, have to divide the colour by the number of samples taken
+      double n = samples * samples;
+      colour = Colour(colour.R() / n, colour.G() / n, colour.B() / n);
+
       d.img(x, y, 0) = colour.R();
       d.img(x, y, 1) = colour.G();
       d.img(x, y, 2) = colour.B();
@@ -201,7 +216,10 @@ void a4_render(// What to render
     if (I != lights.begin()) std::cerr << ", ";
     std::cerr << **I;
   }
-  std::cerr << "});" << std::endl;
+  std::cerr << ", " << reflection_level << ", " << aa_samples << "});" << std::endl;
+
+  // Seed the rng
+  srand(time(NULL));
 
   // Get pixel unprojection matrix
   double d = view.length();
