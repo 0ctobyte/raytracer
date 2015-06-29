@@ -19,6 +19,16 @@ bool Sphere::intersect(const Ray& ray, Intersection& j) const
   return sphere.intersect(ray, j);
 }
 
+Cylinder::~Cylinder()
+{
+}
+
+bool Cylinder::intersect(const Ray& ray, Intersection& j) const
+{
+  NonhierCylinder cylinder(Point3D(0.0, 0.0, 0.0), 1.0, 1.0);
+  return cylinder.intersect(ray, j);
+}
+
 Cube::~Cube()
 {
 }
@@ -76,6 +86,71 @@ bool NonhierSphere::intersect(const Ray& ray, Intersection& j) const
     return true;
   }
   
+  return false;
+}
+
+NonhierCylinder::~NonhierCylinder()
+{
+}
+
+bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
+{
+  // Ray/cylinder intersection test
+  // The infinite cylinder aligned along the z axis has the implicit formula: (x - p_c.x)^2 + (y - p_c.y)^2 = r^2
+  // Equation of ray: p_o + t*d = p
+  // Substituting the ray equation in the cylinder formula:
+  // ((p_o.x-p_c.x) + t*d.x)^2 + ((p_o.y-p_c.y) + t*d.y)^2 = r^2
+  // -> (p_o.x-p_c.x)^2 + 2t*d.x*(p_o.x-p_c.x) + t^2*d.x^2 + (p_o.y-p_c.y)^2 + 2t*d.y*(p_o.y-p_c.y) + t^2*d.y^2 - r^2 = 0
+  // -> (d.x^2+d.y^2)*t^2 + (2*d.x*(p_o.x-p_c.x)+2*d.y*(p_o.y-p_c.y))*t + ((p_o.x-p_c.x)^2+(p_o.y-p_c.y)^2-r^2) = 0
+  // Thus: A = (d.x^2+d.y^2), B = (2*d.x*(p_o.x-p_c.x)+2*d.y*(p_o.y-p_c.y)), C = ((p_o.x-p_c.x)^2+(p_o.y-p_c.y)^2-r^2)
+  // We must solve this quadratic equation to get the value of t (intersection time)
+  double roots[2];
+
+  Vector3D v = ray.origin() - m_pos;
+  double zmax = m_height / 2.0;
+  double zmin = -zmax;
+  double A = ray.direction()[0]*ray.direction()[0] + ray.direction()[1]*ray.direction()[1];
+  double B = 2*(ray.direction()[0]*v[0] + ray.direction()[1]*v[1]);
+  double C = v[0]*v[0] + v[1]*v[1] - m_radius*m_radius;
+
+  size_t num_roots = quadraticRoots(A, B, C, roots);
+
+  // If there are no roots then there are no intersections
+  // If there is one root, then there is a tangential intersection
+  // If there are two roots, then the ray passes through the cylinder
+  // For this case we take the smallest root greater than 0 to find the nearest intersection point
+  // If the roots are negative then the cylinder is behind the ray
+  double t = std::numeric_limits<double>::infinity();
+  if(num_roots > 0)
+  {
+    double t1 = roots[0];
+    double t2 = (num_roots == 1) ? std::numeric_limits<double>::infinity() : roots[1];
+
+    // The intersection times were negative
+    if(t1 < 0 && t2 < 0) return false;
+
+    // Calculate the z coordinates of the intersection times
+    double z1 = v[2] + t1*ray.direction()[2];
+    double z2 = v[2] + t2*ray.direction()[2];
+
+    // Check to see if the intersection times are within the bounds of the finite open-ended cylinder
+    // Find the smallest non-negative intersection time 
+    t = (z1 < zmax && z1 > zmin) ? t1 : t;
+    t = (z2 < zmax && z2 > zmin) ? ((t2 < t) ? t2 : t) : t;
+
+    // No intersection times were within the finite cylinder
+    if(std::isinf<double>(t)) return false;
+
+    // The normal is essentially the vector from the center point to the intersection point removing the component
+    // corresponding to the axis which the cylinder is aligned (the Z axis in this case)
+    j.q = ray.origin() + t*ray.direction();
+    j.n = j.q-m_pos;
+    j.n[2] = 0.0;
+    j.n.normalized();
+
+    return true;
+  }
+
   return false;
 }
 

@@ -164,6 +164,24 @@ int gr_sphere_cmd(lua_State* L)
   return 1;
 }
 
+// Create a cylinder node
+extern "C"
+int gr_cylinder_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+  
+  const char* name = luaL_checkstring(L, 1);
+  data->node = new GeometryNode(name, new Cylinder());
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Create a cube node
 extern "C"
 int gr_cube_cmd(lua_State* L)
@@ -199,6 +217,31 @@ int gr_nh_sphere_cmd(lua_State* L)
   double radius = luaL_checknumber(L, 3);
 
   data->node = new GeometryNode(name, new NonhierSphere(pos, radius));
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a non-hierarchical cylinder node
+extern "C"
+int gr_nh_cylinder_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  Point3D pos;
+  get_tuple(L, 2, &pos[0], 3);
+
+  double radius = luaL_checknumber(L, 3);
+  double height = luaL_checknumber(L, 4);
+
+  data->node = new GeometryNode(name, new NonhierCylinder(pos, radius, height));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -543,6 +586,8 @@ static const luaL_reg grlib_functions[] = {
   {"mesh", gr_mesh_cmd},
   {"light", gr_light_cmd},
   {"render", gr_render_cmd},
+  {"nh_cylinder", gr_nh_cylinder_cmd},
+  {"cylinder", gr_cylinder_cmd},
   {0, 0}
 };
 

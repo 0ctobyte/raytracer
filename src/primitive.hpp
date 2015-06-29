@@ -20,6 +20,13 @@ public:
   virtual bool intersect(const Ray& ray, Intersection& j) const;
 };
 
+class Cylinder : public Primitive {
+public:
+  virtual ~Cylinder();
+
+  virtual bool intersect(const Ray& ray, Intersection& j) const;
+};
+
 class Cube : public Primitive {
 public:
   virtual ~Cube();
@@ -40,6 +47,22 @@ public:
 private:
   Point3D m_pos;
   double m_radius;
+};
+
+class NonhierCylinder : public Primitive {
+public:
+  NonhierCylinder(const Point3D& pos, double radius, double height)
+    : m_pos(pos), m_radius(radius), m_height(height)
+  {
+  }
+  virtual ~NonhierCylinder();
+
+  virtual bool intersect(const Ray& ray, Intersection& j) const;
+
+private:
+  Point3D m_pos;
+  double m_radius;
+  double m_height;
 };
 
 class NonhierBox : public Primitive {
