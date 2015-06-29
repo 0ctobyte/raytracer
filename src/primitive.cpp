@@ -121,37 +121,79 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   // For this case we take the smallest root greater than 0 to find the nearest intersection point
   // If the roots are negative then the cylinder is behind the ray
   double t = std::numeric_limits<double>::infinity();
+  Vector3D N;
+  bool intersected = false;
   if(num_roots > 0)
   {
     double t1 = roots[0];
     double t2 = (num_roots == 1) ? std::numeric_limits<double>::infinity() : roots[1];
 
-    // The intersection times were negative
-    if(t1 < 0 && t2 < 0) return false;
+    // The intersection times are negative which means the cylinder is completely behind the ray
+    if(t1 > 0 && t2 > 0)
+    {
+      // Calculate the z coordinates of the intersection times
+      double z1 = v[2] + t1*ray.direction()[2];
+      double z2 = v[2] + t2*ray.direction()[2];
 
-    // Calculate the z coordinates of the intersection times
-    double z1 = v[2] + t1*ray.direction()[2];
-    double z2 = v[2] + t2*ray.direction()[2];
+      // Check to see if the intersection times are within the bounds of the finite open-ended cylinder
+      // Find the smallest non-negative intersection time 
+      t = (z1 < zmax && z1 > zmin) ? t1 : t;
+      t = (z2 < zmax && z2 > zmin) ? ((t2 < t) ? t2 : t) : t;
 
-    // Check to see if the intersection times are within the bounds of the finite open-ended cylinder
-    // Find the smallest non-negative intersection time 
-    t = (z1 < zmax && z1 > zmin) ? t1 : t;
-    t = (z2 < zmax && z2 > zmin) ? ((t2 < t) ? t2 : t) : t;
+      // No intersection times were within the finite cylinder
+      if(!std::isinf<double>(t)) 
+      {
+        // The normal is essentially the vector from the center point to the intersection point removing the component
+        // corresponding to the axis which the cylinder is aligned (the Z axis in this case)
+        N = (ray.origin() + t*ray.direction())-m_pos;
+        N[2] = 0.0;
 
-    // No intersection times were within the finite cylinder
-    if(std::isinf<double>(t)) return false;
-
-    // The normal is essentially the vector from the center point to the intersection point removing the component
-    // corresponding to the axis which the cylinder is aligned (the Z axis in this case)
-    j.q = ray.origin() + t*ray.direction();
-    j.n = j.q-m_pos;
-    j.n[2] = 0.0;
-    j.n.normalized();
-
-    return true;
+        intersected = true;
+      }
+    }
   }
 
-  return false;
+  // We must test for intersection with the endcaps regardless whether the ray intersects the body of the cylinder
+  Vector3D nzmin(0.0, 0.0, -1.0);
+  double denom = nzmin.dot(ray.direction());
+  if(fabs(denom) > std::numeric_limits<double>::epsilon())
+  {
+    // We first checked if the ray intersects with the plane containing the end cap (disc)
+    // Then we check if the intersection point is within the disc (P-Q).(P-Q) <= r^2
+    Point3D Q(0.0, 0.0, zmin);
+    double tzmin = nzmin.dot(Q-v) / denom;
+    Point3D P = Point3D(v[0], v[1], v[2]) + tzmin*ray.direction();
+    if(tzmin < t && tzmin > 0 && ((P-Q).dot(P-Q) - m_radius*m_radius) < std::numeric_limits<double>::epsilon())
+    {
+      t = tzmin;
+      N = nzmin;
+      intersected = true;
+    }
+  }
+
+  // Do the same check for the other end cap
+  Vector3D nzmax(0.0, 0.0, 1.0);
+  denom = nzmax.dot(ray.direction());
+  if(fabs(denom) > std::numeric_limits<double>::epsilon())
+  {
+    Point3D Q(0.0, 0.0, zmax);
+    double tzmax = nzmax.dot(Q-v) / denom;
+    Point3D P = Point3D(v[0], v[1], v[2]) + tzmax*ray.direction();
+    if(tzmax < t && tzmax > 0 && ((P-Q).dot(P-Q) - m_radius*m_radius) < std::numeric_limits<double>::epsilon())
+    {
+      t = tzmax;
+      N = nzmax;
+      intersected = true;
+    }
+  }
+
+  if(intersected)
+  {
+    j.q = ray.origin() + t*ray.direction();
+    j.n = N.normalized();
+  }
+
+  return intersected;
 }
 
 NonhierBox::~NonhierBox()
