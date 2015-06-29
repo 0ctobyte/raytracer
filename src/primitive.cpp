@@ -300,3 +300,11 @@ bool NonhierBox::intersect(const Ray& ray, Intersection& j) const
   return true;
 }
 
+NonhierPlane::~NonhierPlane()
+{
+}
+
+bool NonhierPlane::intersect(const Ray& ray, Intersection& j) const
+{
+}
+
