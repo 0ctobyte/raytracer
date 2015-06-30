@@ -110,4 +110,24 @@ protected:
   Primitive* m_primitive;
 };
 
+class ConstructiveSolidGeometryNode : public GeometryNode {
+public:
+  ConstructiveSolidGeometryNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  virtual ~ConstructiveSolidGeometryNode();
+
+  virtual bool intersect(const Ray& ray, Intersection& i) const = 0;
+
+protected:
+  GeometryNode* m_A;
+  GeometryNode* m_B;
+};
+
+class UnionNode : public ConstructiveSolidGeometryNode {
+public:
+  UnionNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  virtual ~UnionNode();
+
+  virtual bool intersect(const Ray& ray, Intersection& i) const;
+};
+
 #endif

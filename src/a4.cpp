@@ -51,7 +51,7 @@ Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, P
 Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
 {
   Point3D surface_point = i.q;
-  Vector3D normal = i.n;
+  Vector3D normal = i.n.normalized();
   const PhongMaterial *material = dynamic_cast<const PhongMaterial*>(i.m);
     
   // Set up the parameters for the lights
@@ -99,7 +99,8 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light
   if(intersected)
   {
     // Calculate hit point. Move the hit position a little away from the object so the ray doesn't intersect from the originating object
-    Point3D hit = i.q + (1e-9)*i.n;
+    Vector3D n = i.n.normalized();
+    Point3D hit = i.q + (1e-9)*n;
 
     // Add the ambient colour to the object
     const PhongMaterial* material = dynamic_cast<const PhongMaterial*>(i.m);
@@ -124,7 +125,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light
     Colour reflected_colour(0.0, 0.0, 0.0);
     if(recurse_level > 0) 
     {
-      Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(i.n)*i.n);
+      Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(n)*n);
       reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, samples);
     }
 

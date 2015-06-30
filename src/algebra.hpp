@@ -584,11 +584,6 @@ public:
     , m(NULL)
     //, t(std::numeric_limits<double>::infinity())
   {}
-  Intersection(const Point3D q, const Vector3D n, const Material* m)
-    : q(q)
-    , n(n)
-    , m(m)
-  {}
   Intersection(const Intersection& other)
     : q(other.q)
     , n(other.n.normalized())

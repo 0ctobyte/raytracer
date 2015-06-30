@@ -56,7 +56,7 @@ bool SceneNode::intersect(const Ray& ray, Intersection& i) const
   if(intersects)
   {
     i.q = m_trans * i.q;
-    i.n = transNorm(m_invtrans, i.n).normalized();
+    i.n = transNorm(m_invtrans, i.n);
   }
   
   return intersects;
@@ -107,7 +107,7 @@ bool GeometryNode::intersect(const Ray& ray, Intersection& i) const
   if(intersects) 
   {
     i.q = m_trans * k.q;
-    i.n = transNorm(m_invtrans, k.n).normalized();
+    i.n = transNorm(m_invtrans, k.n);
     i.m = m_material;
   }
 
@@ -117,4 +117,42 @@ bool GeometryNode::intersect(const Ray& ray, Intersection& i) const
 GeometryNode::~GeometryNode()
 {
 }
- 
+
+ConstructiveSolidGeometryNode::ConstructiveSolidGeometryNode(const std::string& name, GeometryNode *A, GeometryNode *B)
+  : GeometryNode(name, NULL)
+  , m_A(A)
+  , m_B(B)
+{
+}
+
+ConstructiveSolidGeometryNode::~ConstructiveSolidGeometryNode()
+{
+}
+
+UnionNode::UnionNode(const std::string& name, GeometryNode *A, GeometryNode *B)
+  : ConstructiveSolidGeometryNode(name, A, B)
+{
+}
+
+bool UnionNode::intersect(const Ray& ray, Intersection& i) const
+{
+  Ray r(m_invtrans * ray.origin(), m_invtrans * ray.direction());
+
+  Intersection j, k;
+  bool intersects_a = m_A->intersect(r, j);
+  bool intersects_b = m_B->intersect(r, k);
+
+  if(intersects_a || intersects_b)
+  {
+    i = (std::isinf(j.q[0]) || std::isinf(j.q[1]) || std::isinf(j.q[2]) || (k.q-r.origin()).length() < (j.q-r.origin()).length()) ? k : j;
+    i.q = m_trans * i.q;
+    i.n = transNorm(m_invtrans, i.n);
+  }
+
+  return (intersects_a || intersects_b || SceneNode::intersect(ray, i));
+}
+
+UnionNode::~UnionNode()
+{
+}
+
