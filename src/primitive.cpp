@@ -49,6 +49,16 @@ bool Plane::intersect(const Ray& ray, Intersection& j) const
   return plane.intersect(ray, j);
 }
 
+Torus::~Torus()
+{
+}
+
+bool Torus::intersect(const Ray& ray, Intersection& j) const
+{
+  NonhierTorus torus(Point3D(0.0, 0.0, 0.0), 1, 0.5);
+  return torus.intersect(ray, j);
+}
+
 NonhierSphere::~NonhierSphere()
 {
 }
@@ -333,6 +343,67 @@ bool NonhierPlane::intersect(const Ray& ray, Intersection& j) const
 
   j.q = P;
   j.n = normal;
+
+  return true;
+}
+
+NonhierTorus::~NonhierTorus()
+{
+}
+
+bool NonhierTorus::intersect(const Ray& ray, Intersection& j) const
+{
+  // The implicit formula for the surface of a torus centered at c and lying on the xy plane: (x^2 + y^2 + z^2 + R^2 - r^2)^2 + 4R^2(z^2 - r^2)  
+  // The parametric equation of a ray: O + t*d = P
+  // I'm not going to go through the process of solving this equation. Instead I got the final formula here:
+  // http://www.emeyex.com/site/projects/raytorus.pdf
+  Vector3D p = ray.origin() - m_pos;
+  Vector3D d = ray.direction();
+
+  double R2 = m_oradius*m_oradius;
+  double r2 = m_iradius*m_iradius;
+  double a = d.dot(d);
+  double b = 2*(p.dot(d));
+  double y = p.dot(p) - r2 - R2;
+
+  double _A = 1.0 / (a*a);
+  double B = 2*a*b;
+  double C = (b*b) + 2*a*y + 4*R2*(d[2]*d[2]);
+  double D = 2*b*y + 8*R2*p[2]*d[2];
+  double E = (y*y) + 4*R2*(p[2]*p[2]) - 4*R2*r2;
+
+  double roots[4];
+
+  // Now solve for the roots which shall give us values for t
+  size_t num_roots = quarticRoots(B * _A, C * _A, D * _A, E * _A, roots);
+
+  // If there are no roots, then no intersection
+  if(num_roots == 0) return false;
+
+
+  // If all the roots are less than 0, then the whole torus is behind the ray
+  // Now we want the find the smallest intersection point greater than 0
+  double t = std::numeric_limits<double>::infinity(); 
+  for(size_t i = 0; i < num_roots; i++)
+  {
+    t = (roots[i] > 0 && roots[i] < t) ? roots[i] : t;
+  }
+
+  // No intersection points greater than 0 means the whole torus is behind the ray
+  if(std::isinf(t)) return false;
+
+  // To find the surface normal, we take the partial derivative of the implicit formula of the torus
+  // with respect to each of the coordinates and then plug in the coordinate values from the intersection point
+  Point3D Q = ray.origin() + t*ray.direction();
+  double qx2 = Q[0]*Q[0];
+  double qy2 = Q[1]*Q[1];
+  double qz2 = Q[2]*Q[2];
+  double nx = 4*Q[0]*(qx2 + qy2 + qz2 - r2 - R2);
+  double ny = 4*Q[1]*(qx2 + qy2 + qz2 - r2 - R2);
+  double nz = 4*Q[2]*(qz2 + qy2 + qz2 - r2 - R2) + 8*R2*Q[2];
+  
+  j.q = Q;
+  j.n = Vector3D(nx, ny, nz).normalized();
 
   return true;
 }

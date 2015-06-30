@@ -20,6 +20,7 @@ scene = gr.node('scene')
 
 radius = 2.0
 height = 3.0
+
 sphere = gr.sphere('s')
 scene:add_child(sphere)
 sphere:set_material(mirror)
@@ -29,9 +30,16 @@ sphere:scale(radius, radius, radius)
 cylinder = gr.cylinder('c')
 scene:add_child(cylinder)
 cylinder:set_material(white)
+cylinder:translate(2, 0, 0)
 cylinder:rotate('x', 90.0)
-cylinder:translate(2, -2, 0)
 cylinder:scale(radius, radius, height)
+
+torus = gr.torus('t')
+scene:add_child(torus)
+torus:set_material(red)
+torus:translate(1, 0, -3)
+torus:rotate('x', 50.0)
+torus:rotate('y', 20.0)
 
 -- Room
 room_width = 10.0
