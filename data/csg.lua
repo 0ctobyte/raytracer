@@ -28,7 +28,7 @@ s2 = gr.sphere('s2')
 s2:set_material(green)
 s2:translate(-0.5, 0, 0)
 
-csg = gr.csg_union('union', s1, s2)
+csg = gr.csg_union('csg', s1, s2)
 scene:add_child(csg)
 csg:translate(3, 0, 0)
 
@@ -40,7 +40,7 @@ c1 = gr.cylinder('c1')
 c1:set_material(green)
 c1:rotate('x', 90)
 
-csg2 = gr.csg_union('union', s3, c1)
+csg2 = gr.csg_union('csg2', s3, c1)
 scene:add_child(csg2)
 csg2:translate(-3, 1, 0)
 
@@ -52,11 +52,17 @@ b1 = gr.cube('b1')
 b1:set_material(red)
 b1:translate(-0.5, -0.5, -0.5)
 
-csg3 = gr.csg_union('union', s4, b1)
+csg3 = gr.csg_union('csg3', s4, b1)
 scene:add_child(csg3)
 csg3:translate(0, 0, -2)
 csg3:rotate('y', 45.0)
 csg3:scale(1.5, 1.5, 1.5)
+
+csg4 = gr.csg_intersection('csg4', s4, b1)
+scene:add_child(csg4)
+csg4:translate(-3, 0, -4)
+csg4:rotate('y', 45.0)
+csg4:scale(1.5, 1.5, 1.5)
 
 -- Room
 room_width = 10.0
@@ -120,7 +126,7 @@ light3 = gr.light({room_width/2.0-2, room_height-6, -3}, light_color_2, {1, 0, 0
 --sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
 
 gr.render(scene,
-	  'csg.png', 512, 512,
+	  'csg.png', 256, 256,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
 	  {0.3,0.3,0.3}, {light1, light2}, 2, 1)
 
