@@ -125,7 +125,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light
     if(recurse_level > 0) 
     {
       Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(i.n)*i.n);
-      reflected_colour = (1.0/recurse_level)*a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, samples);
+      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, samples);
     }
 
     // Add the reflection. A coefficient is multiplied with the colour to damp the saturation due to multiple light sources
