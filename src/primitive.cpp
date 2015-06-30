@@ -39,6 +39,16 @@ bool Cube::intersect(const Ray& ray, Intersection& j) const
   return box.intersect(ray, j);
 }
 
+Plane::~Plane()
+{
+}
+
+bool Plane::intersect(const Ray& ray, Intersection& j) const
+{
+  NonhierPlane plane(Point3D(0.0, 0.0, 0.0), 1.0);
+  return plane.intersect(ray, j);
+}
+
 NonhierSphere::~NonhierSphere()
 {
 }
@@ -306,5 +316,24 @@ NonhierPlane::~NonhierPlane()
 
 bool NonhierPlane::intersect(const Ray& ray, Intersection& j) const
 {
+  Vector3D normal(0.0, 1.0, 0.0);
+
+  // Simple intersection with infinite plane calculation. If the denominator is 0, then the ray does not intersect at all
+  double denom = normal.dot(ray.direction());
+  if(fabs(denom) < std::numeric_limits<double>::epsilon()) return false;
+
+  double t = normal.dot(m_pos-ray.origin()) / denom;
+  if(t < 0) return false;
+
+  Point3D P = ray.origin() + t*ray.direction();
+
+  // Now we make sure that the intersection point lies within the truncated plane
+  if(P[0] < (m_pos[0]-m_size) || P[0] > (m_pos[0]+m_size)) return false;
+  if(P[2] < (m_pos[2]-m_size) || P[2] > (m_pos[2]+m_size)) return false;
+
+  j.q = P;
+  j.n = normal;
+
+  return true;
 }
 

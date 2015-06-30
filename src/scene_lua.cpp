@@ -200,6 +200,24 @@ int gr_cube_cmd(lua_State* L)
   return 1;
 }
 
+// Create a bounded plane node
+extern "C"
+int gr_plane_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+  
+  const char* name = luaL_checkstring(L, 1);
+  data->node = new GeometryNode(name, new Plane());
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Create a non-hierarchical sphere node
 extern "C"
 int gr_nh_sphere_cmd(lua_State* L)
@@ -266,6 +284,30 @@ int gr_nh_box_cmd(lua_State* L)
   double size = luaL_checknumber(L, 3);
 
   data->node = new GeometryNode(name, new NonhierBox(pos, size));
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a non-hierarchical bounded plane node
+extern "C"
+int gr_nh_plane_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  Point3D pos;
+  get_tuple(L, 2, &pos[0], 3);
+
+  double size = luaL_checknumber(L, 3);
+
+  data->node = new GeometryNode(name, new NonhierPlane(pos, size));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -588,6 +630,8 @@ static const luaL_reg grlib_functions[] = {
   {"render", gr_render_cmd},
   {"nh_cylinder", gr_nh_cylinder_cmd},
   {"cylinder", gr_cylinder_cmd},
+  {"nh_plane", gr_nh_plane_cmd},
+  {"plane", gr_plane_cmd},
   {0, 0}
 };
 
