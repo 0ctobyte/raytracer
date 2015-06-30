@@ -389,6 +389,69 @@ int gr_csg_union_cmd(lua_State* L)
   return 1;
 }
 
+// Create a CSG Intersection node
+extern "C"
+int gr_csg_intersection_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  gr_node_ud* nodedata_a = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, nodedata_a != 0, 2, "Node expected");
+
+  GeometryNode* node_a = dynamic_cast<GeometryNode*>(nodedata_a->node);
+  luaL_argcheck(L, node_a != 0, 2, "Geometry node expected");
+
+  gr_node_ud* nodedata_b = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
+  luaL_argcheck(L, nodedata_b != 0, 3, "Node expected");
+
+  GeometryNode* node_b = dynamic_cast<GeometryNode*>(nodedata_b->node);
+  luaL_argcheck(L, node_b != 0, 3, "Geometry node expected");
+
+  data->node = new IntersectionNode(name, node_a, node_b);
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a CSG difference node
+extern "C"
+int gr_csg_difference_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  gr_node_ud* nodedata_a = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
+  luaL_argcheck(L, nodedata_a != 0, 2, "Node expected");
+
+  GeometryNode* node_a = dynamic_cast<GeometryNode*>(nodedata_a->node);
+  luaL_argcheck(L, node_a != 0, 2, "Geometry node expected");
+
+  gr_node_ud* nodedata_b = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
+  luaL_argcheck(L, nodedata_b != 0, 3, "Node expected");
+
+  GeometryNode* node_b = dynamic_cast<GeometryNode*>(nodedata_b->node);
+  luaL_argcheck(L, node_b != 0, 3, "Geometry node expected");
+
+  data->node = new DifferenceNode(name, node_a, node_b);
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+
 // Create a polygonal mesh node
 extern "C"
 int gr_mesh_cmd(lua_State* L)
@@ -709,6 +772,8 @@ static const luaL_reg grlib_functions[] = {
   {"nh_torus", gr_nh_torus_cmd},
   {"torus", gr_torus_cmd},
   {"csg_union", gr_csg_union_cmd},
+  {"csg_intersection", gr_csg_intersection_cmd},
+  {"csg_difference", gr_csg_difference_cmd},
   {0, 0}
 };
 

@@ -130,4 +130,20 @@ public:
   virtual bool intersect(const Ray& ray, Intersection& i) const;
 };
 
+class IntersectionNode : public ConstructiveSolidGeometryNode {
+public:
+  IntersectionNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  virtual ~IntersectionNode();
+
+  virtual bool intersect(const Ray& ray, Intersection& i) const;
+};
+
+class DifferenceNode : public ConstructiveSolidGeometryNode {
+public:
+  DifferenceNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  virtual ~DifferenceNode();
+
+  virtual bool intersect(const Ray& ray, Intersection& i) const;
+};
+
 #endif
