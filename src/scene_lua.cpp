@@ -236,6 +236,24 @@ int gr_torus_cmd(lua_State* L)
   return 1;
 }
 
+// Create a cone node
+extern "C"
+int gr_cone_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+  data->node = new GeometryNode(name, new Cone());
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Create a non-hierarchical sphere node
 extern "C"
 int gr_nh_sphere_cmd(lua_State* L)
@@ -351,6 +369,30 @@ int gr_nh_torus_cmd(lua_State* L)
   double iradius = luaL_checknumber(L, 4);
 
   data->node = new GeometryNode(name, new NonhierTorus(pos, oradius, iradius));
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
+// Create a non-hierarchical cone node
+extern "C"
+int gr_nh_cone_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  Point3D pos;
+  get_tuple(L, 2, &pos[0], 3);
+
+  double height = luaL_checknumber(L, 3);
+
+  data->node = new GeometryNode(name, new NonhierCone(pos, height));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -771,6 +813,8 @@ static const luaL_reg grlib_functions[] = {
   {"plane", gr_plane_cmd},
   {"nh_torus", gr_nh_torus_cmd},
   {"torus", gr_torus_cmd},
+  {"nh_cone", gr_nh_cone_cmd},
+  {"cone", gr_cone_cmd},
   {"csg_union", gr_csg_union_cmd},
   {"csg_intersection", gr_csg_intersection_cmd},
   {"csg_difference", gr_csg_difference_cmd},

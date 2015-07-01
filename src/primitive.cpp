@@ -19,6 +19,16 @@ bool Sphere::intersect(const Ray& ray, Intersection& j) const
   return sphere.intersect(ray, j);
 }
 
+Cone::~Cone()
+{
+}
+
+bool Cone::intersect(const Ray& ray, Intersection& j) const
+{
+  NonhierCone cone(Point3D(0.0, 0.0, 0.0), 1.0);
+  return cone.intersect(ray, j);
+}
+
 Cylinder::~Cylinder()
 {
 }
@@ -109,6 +119,78 @@ bool NonhierSphere::intersect(const Ray& ray, Intersection& j) const
   return false;
 }
 
+NonhierCone::~NonhierCone()
+{
+}
+
+bool NonhierCone::intersect(const Ray& ray, Intersection& j) const
+{
+  // The implicit equation of an infinite double cone: x^2 + y^2 = z^2
+  // Need to solve the quadratic formula to get t
+  Vector3D O = ray.origin() - m_pos;
+  Vector3D d = ray.direction();
+
+  double A = d[0]*d[0] + d[1]*d[1] - d[2]*d[2];
+  double B = 2*O[0]*d[0] + 2*O[1]*d[1] - 2*O[2]*d[2];
+  double C = O[0]*O[0] + O[1]*O[1] - O[2]*O[2];
+
+  double zmax = 0.0;
+  double zmin = -m_height;
+
+  double roots[2];
+
+  size_t num_roots = quadraticRoots(A, B, C, roots);
+
+  if(num_roots > 0)
+  {
+    double t1 = roots[0];
+    double t2 = (num_roots == 2) ? roots[1] : std::numeric_limits<double>::infinity();
+
+    // Make sure the intersection interval isn't negative
+    if(t1 > 0 || t2 > 0)
+    {
+      // Calculate the near and far z coordinates
+      double z1 = O[2] + t1*d[2];
+      double z2 = O[2] + t2*d[2];
+
+      // Check to see if the intersection times are within the bounds of the finite open-ended cylinder
+      // Find the smallest non-negative intersection time 
+      double t = (z1 < zmax && z1 > zmin && t1 > 0) ? t1 : std::numeric_limits<double>::infinity();
+      t = (z2 < zmax && z2 > zmin && t2 > 0) ? ((t2 < t) ? t2 : t) : t;
+
+      // Found a valid intersection!
+      if(!std::isinf<double>(t))
+      {
+        
+        // Calculate the intersection interval with the end cap
+        double t3 = (zmin - O[2]) / d[2];
+
+        // The end cap may have been intersected only if there is only one root or the z1 and z2 are on either side of zmin
+        // If so, we check if the intersection point is closer than any other intersection points
+        //int signz1 = ((z1-zmin) > 0) ? 1 : 0;
+        //int signz2 = ((z2-zmin) > 0) ? 1 : 0;
+        Point3D Q = ray.origin() + t*ray.direction();
+        Vector3D N(2*Q[0], 2*Q[1], -2*Q[2]);
+      
+        if(!std::isinf<double>(t3) && t3 > 0 && t3 < t)
+        {
+          t = t3;
+          Q = ray.origin() + t*ray.direction();
+          N = Vector3D(0.0, 0.0, zmin);
+        }
+
+        // To find the normal we just take the gradient and plug the coordinate values for the intersection point into the gradient result
+        j.q = Q;
+        j.n = N.normalized();
+
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 NonhierCylinder::~NonhierCylinder()
 {
 }
@@ -149,7 +231,7 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
     double t2 = (num_roots == 1) ? std::numeric_limits<double>::infinity() : roots[1];
 
     // The intersection times are negative which means the cylinder is completely behind the ray
-    if(t1 > 0 && t2 > 0)
+    if(t1 > 0 || t2 > 0)
     {
       // Calculate the z coordinates of the intersection times
       double z1 = v[2] + t1*ray.direction()[2];
@@ -157,10 +239,10 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
 
       // Check to see if the intersection times are within the bounds of the finite open-ended cylinder
       // Find the smallest non-negative intersection time 
-      t = (z1 < zmax && z1 > zmin) ? t1 : t;
-      t = (z2 < zmax && z2 > zmin) ? ((t2 < t) ? t2 : t) : t;
+      t = (z1 < zmax && z1 > zmin && t1 > 0) ? t1 : t;
+      t = (z2 < zmax && z2 > zmin && t2 > 0) ? ((t2 < t) ? t2 : t) : t;
 
-      // No intersection times were within the finite cylinder
+      // Found a valid intersection
       if(!std::isinf<double>(t)) 
       {
         // The normal is essentially the vector from the center point to the intersection point removing the component

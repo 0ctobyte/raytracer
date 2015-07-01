@@ -41,6 +41,13 @@ torus:translate(1, 0, -3)
 torus:rotate('x', 50.0)
 torus:rotate('y', 20.0)
 
+cone = gr.cone('cone')
+scene:add_child(cone)
+cone:set_material(green)
+cone:translate(-2, 1, -4)
+cone:rotate('x', -90.0)
+cone:scale(1.0, 1.0, 2.0)
+
 -- Room
 room_width = 10.0
 room_height = 10.0
