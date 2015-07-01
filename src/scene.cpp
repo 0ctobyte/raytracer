@@ -200,20 +200,27 @@ bool DifferenceNode::intersect(const Ray& ray, Intersection& i) const
   if(intersects_a)
   {
     double epsilon = std::numeric_limits<double>::epsilon();
-    if(intersects_b && ((k.q-r.origin()).length() - (j.q-r.origin()).length()) < epsilon)
+    if(intersects_b && ((k.q-r.origin()).length() < (j.q-r.origin()).length()))
     {
       int idx = (fabs(r.direction()[0]) > epsilon) ? 0 : ((fabs(r.direction()[1]) > epsilon) ? 1 : 2);
       double t = (j.q[idx] - r.origin()[idx]) / r.direction()[idx];
-      Ray nray(r.origin() + (t+epsilon)*r.direction(), r.direction());
+      Ray nray(r.origin() + (t+1000*epsilon)*r.direction(), r.direction());
 
       Intersection u, v;
       intersects_a = m_A->intersect(nray, u);
       intersects_b = m_B->intersect(nray, v);
 
-      bool conditional = ((v.q-nray.origin()).length() - (u.q-nray.origin()).length()) < epsilon; 
-      i = !intersects_b ? j : ((intersects_a && conditional) ? v : i);
-      intersects = !intersects_b || (intersects_a && conditional);
-      i.n = (intersects_b && (intersects_a && conditional)) ? -i.n : i.n;
+      if(!intersects_b)
+      {
+        i = j;
+        intersects = true;
+      }
+      else if(intersects_a && ((v.q-r.origin()).length() < (u.q-r.origin()).length()))
+      {
+        i = v;
+        i.n = -i.n;
+        intersects = true;
+      }
     }
     else
     {

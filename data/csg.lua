@@ -45,11 +45,17 @@ csg3:translate(0, 0, -2)
 csg3:rotate('y', 45.0)
 csg3:scale(1.5, 1.5, 1.5)
 
-csg4 = gr.csg_intersection('csg4', s4, b1)
+csg4 = gr.csg_difference('csg4', b1, s4)
 scene:add_child(csg4)
 csg4:translate(-3, 0, -4)
 csg4:rotate('y', 45.0)
 csg4:scale(1.5, 1.5, 1.5)
+
+csg5 = gr.csg_intersection('csg5', b1, s4)
+scene:add_child(csg5)
+csg5:translate(3, 0, -4)
+csg5:rotate('y', 45.0)
+csg5:scale(1.5, 1.5, 1.5)
 
 -- Room
 room_width = 10.0
