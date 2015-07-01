@@ -30,8 +30,9 @@ torus:rotate('y', 20.0)
 cone = gr.cone('cone')
 scene:add_child(cone)
 cone:set_material(green_cornell)
-cone:translate(-2, 1, -4)
-cone:rotate('x', -90)
+cone:translate(3, 1.6, 0)
+cone:rotate('x', 60)
+cone:rotate('y', 60.0)
 cone:scale(1.0, 1.0, 2.0)
 
 -- Room
@@ -93,7 +94,7 @@ light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 --sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
 
 gr.render(scene,
-	  'prim.png', 512, 512,
+	  'prim.png', 400, 400,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
 	  {0.2,0.2,0.2}, {light1, light2}, 2, 1)
 

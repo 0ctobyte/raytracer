@@ -26,9 +26,10 @@ c1 = gr.cylinder('c1')
 c1:set_material(green_cornell)
 c1:rotate('x', 90)
 
-csg2 = gr.csg_union('csg2', s3, c1)
+csg2 = gr.csg_difference('csg2', c1, s3)
 scene:add_child(csg2)
 csg2:translate(-3, 1, 0)
+csg2:rotate('x', 90)
 
 s4 = gr.sphere('s4')
 s4:set_material(green_cornell)
@@ -112,7 +113,7 @@ light3 = gr.light({room_width/2.0-2, room_height-6, -3}, light_color_2, {1, 0, 0
 --sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
 
 gr.render(scene,
-	  'csg.png', 1024, 1024,
+	  'csg.png', 400, 400,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.3,0.3,0.3}, {light1, light2}, 4, 4)
+	  {0.3,0.3,0.3}, {light1, light2}, 2, 1)
 

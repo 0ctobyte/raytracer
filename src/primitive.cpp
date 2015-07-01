@@ -167,14 +167,12 @@ bool NonhierCone::intersect(const Ray& ray, Intersection& j) const
 
         // The end cap may have been intersected only if there is only one root or the z1 and z2 are on either side of zmin
         // If so, we check if the intersection point is closer than any other intersection points
-        //int signz1 = ((z1-zmin) > 0) ? 1 : 0;
-        //int signz2 = ((z2-zmin) > 0) ? 1 : 0;
         Point3D Q = ray.origin() + t*ray.direction();
         Vector3D N(2*Q[0], 2*Q[1], -2*Q[2]);
      
         int signz1 = ((z1-zmin) > 0) ? 1 : 0;
         int signz2 = ((z2-zmin) > 0) ? 1 : 0;
-        if(signz1 != signz2 && !std::isinf<double>(t3) && t3 > 0 && t3 < t)
+        if(signz1 != signz2 && t3 > 0 && t3 < t)
         {
           t = t3;
           Q = ray.origin() + t*ray.direction();

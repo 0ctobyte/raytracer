@@ -196,14 +196,39 @@ bool DifferenceNode::intersect(const Ray& ray, Intersection& i) const
   bool intersects_a = m_A->intersect(r, j);
   bool intersects_b = m_B->intersect(r, k);
 
-  if(intersects_a && intersects_b)
+  bool intersects = false;
+  if(intersects_a)
   {
-    i = ((k.q-r.origin()).length() > (j.q-r.origin()).length()) ? k : j;
+    double epsilon = std::numeric_limits<double>::epsilon();
+    if(intersects_b && ((k.q-r.origin()).length() - (j.q-r.origin()).length()) < epsilon)
+    {
+      int idx = (fabs(r.direction()[0]) > epsilon) ? 0 : ((fabs(r.direction()[1]) > epsilon) ? 1 : 2);
+      double t = (j.q[idx] - r.origin()[idx]) / r.direction()[idx];
+      Ray nray(r.origin() + (t+epsilon)*r.direction(), r.direction());
+
+      Intersection u, v;
+      intersects_a = m_A->intersect(nray, u);
+      intersects_b = m_B->intersect(nray, v);
+
+      bool conditional = ((v.q-nray.origin()).length() - (u.q-nray.origin()).length()) < epsilon; 
+      i = !intersects_b ? j : ((intersects_a && conditional) ? v : i);
+      intersects = !intersects_b || (intersects_a && conditional);
+      i.n = (intersects_b && (intersects_a && conditional)) ? -i.n : i.n;
+    }
+    else
+    {
+      i = j;
+      intersects = true;
+    }
+  }
+
+  if(intersects)
+  {
     i.q = m_trans * i.q;
     i.n = transNorm(m_invtrans, i.n);
   }
-
-  return ((intersects_a && intersects_b) || SceneNode::intersect(ray, i));
+    
+  return (intersects || SceneNode::intersect(ray, i));
 }
 
 DifferenceNode::~DifferenceNode()
