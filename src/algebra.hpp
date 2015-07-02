@@ -587,18 +587,24 @@ public:
     : q(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity())
     , n(0.0, 0.0, 0.0)
     , m(NULL)
+    , isLight(false)
+    , lightColour(0.0, 0.0, 0.0)
     //, t(std::numeric_limits<double>::infinity())
   {}
   Intersection(const Intersection& other)
     : q(other.q)
     , n(other.n.normalized())
     , m(other.m)
+    , isLight(other.isLight)
+    , lightColour(other.lightColour)
     //, t(other.t)
   {}
 
   Point3D q; // Intersection point
   Vector3D n; // Surface normal at intersection point
   const Material *m; // Material properties at intersection point
+  bool isLight; // True if intersection with a light object
+  Colour lightColour; // If intersect with light, then this is the colour of the light
   //double t; // Distance from ray's origin along ray's direction vector to intersection point: t*ray.direction + ray.origin
 };
 

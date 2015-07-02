@@ -89,11 +89,10 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, co
   return light->getAttenuation(distance_to_light) * (diffuse + specular);
 }
 
-Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, const Point3D& hit, const Intersection& i)
+Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, const Point3D& light_pos, const Point3D& hit, const Intersection& i)
 {
   // Cast shadow rays to the light source. If the ray intersects an object before reaching the light
   // source then don't count that light sources contribution since it is being blocked
-  Point3D light_pos = light->getPosition();
   Ray shadow(hit, light_pos-hit);
   Intersection u;
   
@@ -126,7 +125,8 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
     for(auto light : lights)
     {
       // Cast shadow rays to each light source
-      colour = colour + a4_shadow_ray(ray, root, light, hit, i);
+      Point3D light_pos = light->getPosition();
+      colour = colour + a4_shadow_ray(ray, root, light, light_pos, hit, i);
     }
 
     // Cast reflection rays and add the colour returned to render reflections on object

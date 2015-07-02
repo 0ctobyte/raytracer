@@ -605,15 +605,14 @@ int gr_light_cmd(lua_State* L)
   gr_light_ud* data = (gr_light_ud*)lua_newuserdata(L, sizeof(gr_light_ud));
   data->light = 0;
 
-  
-  Light l;
-
   double col[3];
-  get_tuple(L, 1, &l.getPosition()[0], 3);
+  double pos[3];
+  double falloff[3];
+  get_tuple(L, 1, pos, 3);
   get_tuple(L, 2, col, 3);
-  get_tuple(L, 3, l.getFalloff(), 3);
+  get_tuple(L, 3, falloff, 3);
 
-  l.getColour() = Colour(col[0], col[1], col[2]);
+  Light l(Colour(col[0], col[1], col[2]), Point3D(pos[0], pos[1], pos[2]), falloff);
   
   data->light = new Light(l);
 
