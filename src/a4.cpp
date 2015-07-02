@@ -16,7 +16,7 @@ struct RenderThreadData {
   Point3D eye;
   Colour ambient;
   std::list<Light*> lights;
-  unsigned int reflection_level, aa_samples;
+  unsigned int reflection_level, aa_samples, shadow_samples;
 };
 
 unsigned int progress = 0;
@@ -104,7 +104,7 @@ Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, 
   return a4_lighting(ray, i, light, light_pos);
 }
 
-Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int samples)
+Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int shadow_samples)
 {
   // Test intersection of ray with scene for each light source
   Colour colour = bg;
@@ -122,19 +122,29 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
     const PhongMaterial* material = dynamic_cast<const PhongMaterial*>(i.m);
     colour = ambient * material->diffuse();
 
-    for(auto light : lights)
+    if(material->diffuse() != Colour(0.0, 0.0, 0.0))
     {
-      // Cast shadow rays to each light source
-      Point3D light_pos = light->getPosition();
-      colour = colour + a4_shadow_ray(ray, root, light, light_pos, hit, i);
+      for(auto light : lights)
+      {
+        // Cast shadow rays to each light source (multiple times if area light for soft shadows)
+        Colour shade_colour(0.0, 0.0, 0.0);
+        unsigned int num_shadow_rays = (light->isPointLight()) ? 1 : shadow_samples;
+        for(unsigned int j = 0; j < num_shadow_rays; j++)
+        {
+          Point3D light_pos = light->getPosition();
+          shade_colour = shade_colour + a4_shadow_ray(ray, root, light, light_pos, hit, i);
+        }
+        if(shade_colour == Colour(0.0, 0.0, 0.0)) continue;
+        colour = colour + Colour(shade_colour.R() / num_shadow_rays, shade_colour.G() / num_shadow_rays, shade_colour.B() / num_shadow_rays);
+      }
     }
 
     // Cast reflection rays and add the colour returned to render reflections on object
     Colour reflected_colour(0.0, 0.0, 0.0);
-    if(recurse_level > 0) 
+    if(material->specular() != Colour(0.0, 0.0, 0.0) && recurse_level > 0) 
     {
       Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(n)*n);
-      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, samples);
+      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, shadow_samples);
     }
 
     // Add the reflection. A coefficient is multiplied with the colour to damp the saturation due to multiple light sources
@@ -151,7 +161,8 @@ void* a4_render_thread(void* data)
   int one_percent = d.width * d.height * 0.01;
   int pixel_count = 0;
 
-  int samples = (d.aa_samples == 0) ? 1 : d.aa_samples;
+  unsigned int shadow_samples = (d.shadow_samples == 0) ? 1 : d.shadow_samples;
+  unsigned int aa_samples = (d.aa_samples == 0) ? 1 : d.aa_samples;
   for (int y = d.ystart; y < d.height; y += d.yskip) {
     for (int x = 0; x < d.width; x++) {
       // Background colour. a4_trace_ray returns this if no intersections
@@ -161,24 +172,24 @@ void* a4_render_thread(void* data)
       Colour colour(0.0, 0.0, 0.0);
 
       // For antialiasing, divide the "pixel" into a n by n grid and cast rays from a random point within each grid box
-      for(int p = 0; p < samples; p++)
+      for(unsigned int p = 0; p < aa_samples; p++)
       {
-        for(int q = 0; q < samples; q++)
+        for(unsigned int q = 0; q < aa_samples; q++)
         {
           // Unproject the pixel to the projection plane
           double e = rand() / RAND_MAX;
-          Point3D pixel ((double)x + ((double)p + e) / (double)samples, (double)y - ((double)q + e) / (double)samples, 0.0);
+          Point3D pixel ((double)x + ((double)p + e) / (double)aa_samples, (double)y - ((double)q + e) / (double)aa_samples, 0.0);
           Point3D p = d.unproject * pixel;
 
           // Create the ray with origin at the eye point
           Ray ray(d.eye, p-d.eye);
 
-          colour = colour + a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, d.reflection_level, d.aa_samples);
+          colour = colour + a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, d.reflection_level, shadow_samples);
         }
       }
 
       // Of course, have to divide the colour by the number of samples taken
-      double n = samples * samples;
+      double n = aa_samples * aa_samples;
       colour = Colour(colour.R() / n, colour.G() / n, colour.B() / n);
 
       (*d.img)(x, y, 0) = colour.R();
@@ -241,13 +252,16 @@ void a4_render(// What to render
     
   Image img(width, height, 3);
 
-  if(num_threads == 0) num_threads = 1;
+  // Flatten the scene hierarchy
+  root->flatten();
 
+  if(num_threads == 0) num_threads = 1;
+  
   std::vector<pthread_t> threads(num_threads);
   std::vector<RenderThreadData> renderData(num_threads);
   for(unsigned int i = 0; i < num_threads; i++)
   {
-    renderData[i] = (RenderThreadData){&img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples};
+    renderData[i] = (RenderThreadData){&img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, shadow_samples};
     int ret = pthread_create(&threads[i], NULL, a4_render_thread, &renderData[i]);
     if(ret)
     {

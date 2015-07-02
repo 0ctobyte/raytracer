@@ -39,6 +39,8 @@ public:
 
   virtual bool intersect(const Ray& ray, Intersection& i) const;
 
+  virtual void flatten();
+
   // Callbacks to be implemented.
   // These will be called from Lua.
   void rotate(char axis, double angle);

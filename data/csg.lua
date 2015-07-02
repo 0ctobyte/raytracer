@@ -119,7 +119,8 @@ light3 = gr.light({room_width/2.0-2, room_height-6, -3}, light_color_2, {1, 0, 0
 --sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
 
 gr.render(scene,
-	  'csg.png', 400, 400,
+	  'csg.png', 512, 512,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.3,0.3,0.3}, {light1, light2}, 4, 2, 1)
+	  {0.3,0.3,0.3}, {light1, light2},
+    4, 2, 1)
 

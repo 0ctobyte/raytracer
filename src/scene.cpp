@@ -62,6 +62,27 @@ bool SceneNode::intersect(const Ray& ray, Intersection& i) const
   return intersects;
 }
 
+void SceneNode::flatten()
+{
+  ChildList children;
+
+  for(auto child : m_children)
+  {
+    child->set_transform(m_trans * child->m_trans);
+    child->flatten();
+    
+    for(auto gchild : child->m_children)
+    {
+      children.push_back(gchild);
+    }
+
+    child->m_children.clear();
+    children.push_back(child);
+  }
+
+  m_children.swap(children);
+}
+
 JointNode::JointNode(const std::string& name)
   : SceneNode(name)
 {

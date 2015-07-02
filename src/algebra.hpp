@@ -544,6 +544,20 @@ inline Colour operator +(const Colour& a, const Colour& b)
   return Colour(a.R()+b.R(), a.G()+b.G(), a.B()+b.B());
 }
 
+inline bool operator ==(const Colour& a, const Colour& b)
+{
+  return (fabs(a.R()-b.R()) < std::numeric_limits<double>::epsilon() &&
+      fabs(a.G()-b.G()) < std::numeric_limits<double>::epsilon() &&
+      fabs(a.B()-b.B()) < std::numeric_limits<double>::epsilon());
+}
+
+inline bool operator !=(const Colour& a, const Colour& b)
+{
+  return (fabs(a.R()-b.R()) > std::numeric_limits<double>::epsilon() ||
+      fabs(a.G()-b.G()) > std::numeric_limits<double>::epsilon() ||
+      fabs(a.B()-b.B()) > std::numeric_limits<double>::epsilon());
+}
+
 inline Colour clamp(const Colour& a, double min, double max)
 {
   return Colour((a.R() < min) ? min : ((a.R() > max) ? max : a.R()),
