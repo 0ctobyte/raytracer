@@ -69,6 +69,16 @@ bool Torus::intersect(const Ray& ray, Intersection& j) const
   return torus.intersect(ray, j);
 }
 
+Disc::~Disc()
+{
+}
+
+bool Disc::intersect(const Ray& ray, Intersection& j) const
+{
+  NonhierDisc disc(Point3D(0.0, 0.0, 0.0), 1.0);
+  return disc.intersect(ray, j);
+}
+
 NonhierSphere::~NonhierSphere()
 {
 }
@@ -256,35 +266,31 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   }
 
   // We must test for intersection with the endcaps regardless whether the ray intersects the body of the cylinder
-  Vector3D nzmin(0.0, 0.0, -1.0);
-  double denom = nzmin.dot(ray.direction());
-  if(fabs(denom) > std::numeric_limits<double>::epsilon())
+  Point3D V(v[0], v[1], v[2]);
+  Ray rends(V, ray.direction());
+  Intersection iends;
+  
+  NonhierDisc dmin(Point3D(0.0, 0.0, zmin), m_radius);
+  if(dmin.intersect(rends, iends))
   {
-    // We first checked if the ray intersects with the plane containing the end cap (disc)
-    // Then we check if the intersection point is within the disc (P-Q).(P-Q) <= r^2
-    Point3D Q(0.0, 0.0, zmin);
-    double tzmin = nzmin.dot(Q-v) / denom;
-    Point3D P = Point3D(v[0], v[1], v[2]) + tzmin*ray.direction();
-    if(tzmin < t && tzmin > 0 && ((P-Q).dot(P-Q) - m_radius*m_radius) < std::numeric_limits<double>::epsilon())
+    double tzmin = (iends.q[0] - V[0]) / rends.direction()[0];
+    if(tzmin < t)
     {
       t = tzmin;
-      N = nzmin;
+      N = Vector3D(0.0, 0.0, -1.0);
       intersected = true;
     }
   }
 
   // Do the same check for the other end cap
-  Vector3D nzmax(0.0, 0.0, 1.0);
-  denom = nzmax.dot(ray.direction());
-  if(fabs(denom) > std::numeric_limits<double>::epsilon())
+  NonhierDisc dmax(Point3D(0.0, 0.0, zmax), m_radius);
+  if(dmax.intersect(rends, iends))
   {
-    Point3D Q(0.0, 0.0, zmax);
-    double tzmax = nzmax.dot(Q-v) / denom;
-    Point3D P = Point3D(v[0], v[1], v[2]) + tzmax*ray.direction();
-    if(tzmax < t && tzmax > 0 && ((P-Q).dot(P-Q) - m_radius*m_radius) < std::numeric_limits<double>::epsilon())
+    double tzmax = (iends.q[0] - V[0]) / rends.direction()[0];
+    if(tzmax < t)
     {
       t = tzmax;
-      N = nzmax;
+      N = Vector3D(0.0, 0.0, 1.0);
       intersected = true;
     }
   }
@@ -486,6 +492,36 @@ bool NonhierTorus::intersect(const Ray& ray, Intersection& j) const
   
   j.q = Q;
   j.n = Vector3D(nx, ny, nz).normalized();
+
+  return true;
+}
+
+NonhierDisc::~NonhierDisc()
+{
+}
+
+bool NonhierDisc::intersect(const Ray& ray, Intersection& j) const
+{
+  // Assume the disc is lying flat on the xy plane, thus the normal is in the positive z direction
+  Vector3D n(0.0, 0.0, 1.0);
+
+  // First we intersect with the plane containing the disc
+  double den = n.dot(ray.direction());
+  if(fabs(den) < std::numeric_limits<double>::epsilon()) return false;
+
+  // The intersection point cannot be behind the ray
+  double t = n.dot(m_pos - ray.origin()) * (1 / den);
+  if(t < 0) return false;
+
+  // Now get the intersection point
+  Point3D Q = ray.origin() + t * ray.direction();
+
+  // Check if the intersection point is within the radius of the disc
+  if((Q-m_pos).dot(Q-m_pos) > (m_radius*m_radius)) return false;
+
+  // Flip the normal if the backface is facing the ray
+  j.q = Q;
+  j.n = ((ray.origin() - m_pos).dot(n) < 0) ? -n : n;
 
   return true;
 }

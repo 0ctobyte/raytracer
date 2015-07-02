@@ -88,7 +88,23 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
   return attenuation * (diffuse + specular);
 }
 
-Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int samples)
+Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, const Point3D& hit, const Intersection& i)
+{
+  // Cast shadow rays to the light source. If the ray intersects an object before reaching the light
+  // source then don't count that light sources contribution since it is being blocked
+  Point3D light_pos = light->position;
+  Ray shadow(hit, light_pos-hit);
+  Intersection u;
+  
+  // Make sure to check if intersection point is before light source
+  if(root->intersect(shadow, u) && (u.q-shadow.origin()).length() < (light_pos-shadow.origin()).length()) return Colour(0.0, 0.0, 0.0);
+
+  // Perform phong shading at intersection point. The ambient factor is essentially 1 / number of lights.
+  // This is so that the ambient light is not added to the final colour multiple times (one time for each light source)
+  return a4_lighting(ray, i, light);
+}
+
+Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int samples)
 {
   // Test intersection of ray with scene for each light source
   Colour colour = bg;
@@ -108,17 +124,8 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode *root, const std::list<Light
 
     for(auto light : lights)
     {
-      // Cast shadow rays to the light source. If the ray intersects an object before reaching the light
-      // source then don't count that light sources contribution since it is being blocked
-      Ray shadow(hit, light->position-hit);
-      Intersection u;
-      
-      // Make sure to check if intersection point is before light source
-      if(root->intersect(shadow, u) && (u.q-shadow.origin()).length() < (light->position-shadow.origin()).length()) continue;
-
-      // Perform phong shading at intersection point. The ambient factor is essentially 1 / number of lights.
-      // This is so that the ambient light is not added to the final colour multiple times (one time for each light source)
-      colour = colour + a4_lighting(ray, i, light);
+      // Cast shadow rays to each light source
+      colour = colour + a4_shadow_ray(ray, root, light, hit, i);
     }
 
     // Cast reflection rays and add the colour returned to render reflections on object

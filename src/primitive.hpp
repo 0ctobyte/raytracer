@@ -55,6 +55,13 @@ public:
   virtual bool intersect(const Ray& ray, Intersection& j) const;
 };
 
+class Disc : public Primitive {
+public:
+  virtual ~Disc();
+
+  virtual bool intersect(const Ray& ray, Intersection& j) const;
+};
+
 class NonhierSphere : public Primitive {
 public:
   NonhierSphere(const Point3D& pos, double radius)
@@ -150,6 +157,23 @@ private:
   Point3D m_pos;
   double m_oradius;
   double m_iradius;
+};
+
+class NonhierDisc : public Primitive {
+public:
+  NonhierDisc(const Point3D& pos, double radius)
+    : m_pos(pos)
+    , m_radius(radius)
+  {
+  }
+
+  virtual ~NonhierDisc();
+
+  virtual bool intersect(const Ray& ray, Intersection& j) const;
+
+private:
+  Point3D m_pos;
+  double m_radius;
 };
 
 #endif

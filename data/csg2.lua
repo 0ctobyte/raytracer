@@ -1,44 +1,45 @@
--- materials
+
 require('materials')
 
 -- Scene root
 scene = gr.node('scene')
 
 radius = 2.0
-height = 3.0
+height = 2.0
 
-sphere = gr.sphere('s')
-scene:add_child(sphere)
-sphere:set_material(mirror)
-sphere:translate(-2,radius - 1,0)
-sphere:scale(radius, radius, radius)
+c1 = gr.cylinder('c1')
+c1:set_material(green_cornell)
+c1:rotate('x', 90)
+c1:scale(0.5, 0.5, height)
 
-cylinder = gr.cylinder('c')
-scene:add_child(cylinder)
-cylinder:set_material(white_cornell)
-cylinder:translate(2, 0, 0)
-cylinder:rotate('x', 90.0)
-cylinder:scale(radius, radius, height)
+c2 = gr.cylinder('c2')
+c2:set_material(green_cornell)
+c2:rotate('y', 90)
+c2:scale(0.5, 0.5, height)
 
-torus = gr.torus('t')
-scene:add_child(torus)
-torus:set_material(red_cornell)
-torus:translate(1, 0, -3)
-torus:rotate('x', 50.0)
-torus:rotate('y', 20.0)
+csg1 = gr.csg_union('csg1', c1, c2)
 
-cone = gr.cone('cone')
-scene:add_child(cone)
-cone:set_material(green_cornell)
-cone:translate(3, 1.6, 0)
-cone:rotate('x', 60)
-cone:rotate('y', 60.0)
-cone:scale(1.0, 1.0, 2.0)
+c3 = gr.cylinder('c3')
+c3:set_material(green_cornell)
+c3:scale(0.5, 0.5, height)
 
-disc = gr.disc('disc')
-scene:add_child(disc)
-disc:set_material(green_cornell)
-disc:translate(0.0, 4.0, 0.0)
+csg2 = gr.csg_union('csg2', csg1, c3)
+
+s1 = gr.sphere('s4')
+s1:set_material(white_cornell)
+s1:scale(0.6, 0.6, 0.6)
+
+b1 = gr.cube('b1')
+b1:set_material(red_cornell)
+b1:translate(-0.5, -0.5, -0.5)
+
+csg3 = gr.csg_intersection('csg3', s1, b1)
+csg3:scale(1.5, 1.5, 1.5)
+
+csg4 = gr.csg_difference('csg4', csg3, csg2)
+scene:add_child(csg4)
+csg4:translate(0, 2, 0)
+csg4:scale(2.0, 2.0, 2.0)
 
 -- Room
 room_width = 10.0
@@ -96,10 +97,13 @@ light1 = gr.light({0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 -- by camera
 light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 
+-- Left wall
+light3 = gr.light({room_width/2.0-2, room_height-6, -3}, light_color_2, {1, 0, 0})
+
 --sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
 
 gr.render(scene,
-	  'prim.png', 400, 400,
+	  'csg2.png', 400, 400,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1, light2}, 2, 1)
+	  {0.3,0.3,0.3}, {light1, light2}, 2, 1)
 
