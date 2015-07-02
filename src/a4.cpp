@@ -4,9 +4,10 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <cstdlib>
 #include <cmath>
 #include <algorithm>
+#include <chrono>
+#include <random>
 
 struct RenderThreadData {
   Image* img;
@@ -102,7 +103,7 @@ Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, 
   return a4_lighting(ray, i, light, light_pos);
 }
 
-Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int shadow_samples)
+Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, std::mt19937& gen, unsigned int recurse_level, unsigned int shadow_samples)
 {
   // Test intersection of ray with scene for each light source
   Colour colour = bg;
@@ -129,7 +130,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
         unsigned int num_shadow_rays = (light->isPointLight()) ? 1 : shadow_samples;
         for(unsigned int j = 0; j < num_shadow_rays; j++)
         {
-          Point3D light_pos = light->getPosition();
+          Point3D light_pos = (num_shadow_rays == 1) ? light->getPosition() : light->getPosition(gen);
           shade_colour = shade_colour + a4_shadow_ray(ray, root, light, light_pos, hit, i);
         }
         if(shade_colour == Colour(0.0, 0.0, 0.0)) continue;
@@ -142,7 +143,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
     if(material->specular() != Colour(0.0, 0.0, 0.0) && recurse_level > 0) 
     {
       Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(n)*n);
-      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, --recurse_level, shadow_samples);
+      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, gen, --recurse_level, shadow_samples);
     }
 
     // Add the reflection. A coefficient is multiplied with the colour to damp the saturation due to multiple light sources
@@ -154,6 +155,10 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
 
 void* a4_render_thread(void* data)
 {
+  // Seed the rng
+  std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
+  std::uniform_real_distribution<double> uniform(0, 1);
+
   RenderThreadData d = *static_cast<RenderThreadData*>(data);
 
   int one_percent = d.width * d.height * 0.01;
@@ -175,14 +180,14 @@ void* a4_render_thread(void* data)
         for(unsigned int q = 0; q < aa_samples; q++)
         {
           // Unproject the pixel to the projection plane
-          double e = (double)rand() / (double)RAND_MAX;
+          double e = uniform(gen);
           Point3D pixel ((double)x + ((double)p + e) / (double)aa_samples, (double)y - ((double)q + e) / (double)aa_samples, 0.0);
           Point3D p = d.unproject * pixel;
 
           // Create the ray with origin at the eye point
           Ray ray(d.eye, p-d.eye);
 
-          colour = colour + a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, d.reflection_level, shadow_samples);
+          colour = colour + a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, gen, d.reflection_level, shadow_samples);
         }
       }
 
@@ -240,9 +245,6 @@ void a4_render(// What to render
     std::cerr << **I;
   }
   std::cerr << ", " << num_threads << ", " << reflection_level << ", " << aa_samples << ", " << shadow_samples << "});" << std::endl;
-
-  // Seed the rng
-  srand(time(NULL));
 
   // Get pixel unprojection matrix
   double d = view.length();

@@ -2,7 +2,6 @@
 #include <iostream>
 #include <limits>
 #include <cmath>
-#include <cstdlib>
 
 Light::Light()
   : colour(0.0, 0.0, 0.0),
@@ -72,10 +71,11 @@ bool DiscLight::intersect(const Ray& ray, Intersection& j) const
   return true;
 }
 
-Point3D DiscLight::getPosition() const
+Point3D DiscLight::getPosition(std::mt19937& gen) const
 {
-  double e1 = (double)rand() / (double)RAND_MAX;
-  double e2 = (double)rand() / (double)RAND_MAX;
+  std::uniform_real_distribution<double> uniform(0, 1);
+  double e1 = uniform(gen);
+  double e2 = uniform(gen);
 
   return Matrix4x4().rotate(e2*360.0, m_normal) * (position + (e1 * m_radius) * m_perp);
 }
