@@ -71,17 +71,15 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, co
   // Calculate the diffuse colour component
   Colour diffuse = diffuse_brightness * material->diffuse() * light->getColour();
 
-  // Calculate the angle of reflectance
-  // The incidence vector is the vector surface_to_light but in the opposite direction
-  Vector3D incidence = -surface_to_light;
-  Vector3D reflected = (incidence - 2*(incidence.dot(normal))*normal).normalized();
-
   // Calculate the vector from the eye point to the surface point
   Vector3D surface_to_eye = (ray.origin() - surface_point).normalized();
 
+  // Calculate the halfway vector according to the Blinn-Phong lighing model
+  Vector3D halfway = (surface_to_light + surface_to_eye).normalized();
+
   // Calculate the specular brightness
   // Can't have specular highlights if no diffuse lighting at the point!
-  double specular_brightness = (diffuse_brightness > 0) ? pow(std::max(0.0, surface_to_eye.dot(reflected)), material->shininess()) : 0.0;
+  double specular_brightness = (diffuse_brightness > 0) ? pow(std::max(0.0, normal.dot(halfway)), material->shininess()) : 0.0;
 
   // Calculate the specular colour component
   Colour specular = specular_brightness * material->specular() * light->getColour();
@@ -177,7 +175,7 @@ void* a4_render_thread(void* data)
         for(unsigned int q = 0; q < aa_samples; q++)
         {
           // Unproject the pixel to the projection plane
-          double e = rand() / RAND_MAX;
+          double e = (double)rand() / (double)RAND_MAX;
           Point3D pixel ((double)x + ((double)p + e) / (double)aa_samples, (double)y - ((double)q + e) / (double)aa_samples, 0.0);
           Point3D p = d.unproject * pixel;
 

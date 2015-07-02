@@ -622,6 +622,36 @@ int gr_light_cmd(lua_State* L)
   return 1;
 }
 
+// Make a disc light
+extern "C"
+int gr_disc_light_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+
+  gr_light_ud* data = (gr_light_ud*)lua_newuserdata(L, sizeof(gr_light_ud));
+  data->light = 0;
+
+  double col[3];
+  double pos[3];
+  double falloff[3];
+  double normal[3];
+  get_tuple(L, 1, pos, 3);
+  get_tuple(L, 2, col, 3);
+  get_tuple(L, 3, falloff, 3);
+  get_tuple(L, 4, normal, 3);
+
+  double radius = luaL_checknumber(L, 5);
+
+  DiscLight l(Colour(col[0], col[1], col[2]), Point3D(pos[0], pos[1], pos[2]), falloff, Vector3D(normal[0], normal[1], normal[2]), radius);
+  
+  data->light = new DiscLight(l);
+
+  luaL_newmetatable(L, "gr.light");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Render a scene
 extern "C"
 int gr_render_cmd(lua_State* L)
@@ -850,6 +880,7 @@ static const luaL_reg grlib_functions[] = {
   {"nh_box", gr_nh_box_cmd},
   {"mesh", gr_mesh_cmd},
   {"light", gr_light_cmd},
+  {"disc_light", gr_disc_light_cmd},
   {"render", gr_render_cmd},
   {"nh_cylinder", gr_nh_cylinder_cmd},
   {"cylinder", gr_cylinder_cmd},

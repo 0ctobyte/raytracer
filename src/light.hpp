@@ -6,7 +6,7 @@
 #include <iosfwd>
 
 // Represents a simple point light.
-class Light : Primitive {
+class Light : public Primitive {
 public:
   Light();
   Light(const Colour& col, const Point3D& pos, double* foff)
@@ -23,16 +23,8 @@ public:
   {
     return colour;
   }
-  Colour& getColour()
-  {
-    return colour;
-  }
 
   virtual Point3D getPosition() const
-  {
-    return position;
-  }
-  Point3D& getPosition()
   {
     return position;
   }
@@ -40,10 +32,6 @@ public:
   double getAttenuation(double r) const
   {
     return (1.0 / (falloff[0] + falloff[1]*r + falloff[2]*(r*r)));
-  }
-  double* getFalloff()
-  {
-    return falloff;
   }
 
   virtual bool isPointLight()
@@ -53,20 +41,19 @@ public:
 
   virtual bool intersect(const Ray& ray, Intersection& j) const;
 
-  friend std::ostream& operator<<(std::ostream& out, const Light& l);
-
+  virtual std::ostream& toOutput(std::ostream& out) const;
 protected:
   Colour colour;
   Point3D position;
   double falloff[3];
 };
 
-class DiscLight : Light {
+class DiscLight : public Light {
 public:
-  DiscLight(const Colour& col, const Point3D& pos, double* foff, double radius, const Vector3D& normal)
+  DiscLight(const Colour& col, const Point3D& pos, double* foff, const Vector3D& normal, double radius)
     : Light(col, pos, foff)
-    , m_radius(radius)
     , m_normal(normal.normalized())
+    , m_radius(radius)
   {
     // Find a perpendicular vector to the normal on the plane
     // This technique is described by Hughes and Moller in their paper:
@@ -96,10 +83,15 @@ public:
   virtual Point3D getPosition() const; 
   virtual bool intersect(const Ray& ray, Intersection& j) const;
 
+  virtual std::ostream& toOutput(std::ostream& out) const;
 private:
-  double m_radius;
   Vector3D m_normal;
   Vector3D m_perp;
+  double m_radius;
 };
 
+inline std::ostream& operator<<(std::ostream& out, const Light& l)
+{
+  return l.toOutput(out);
+}
 #endif

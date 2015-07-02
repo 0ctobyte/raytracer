@@ -32,6 +32,17 @@ bool Light::intersect(const Ray& ray, Intersection& j) const
   return true;
 }
 
+std::ostream& Light::toOutput(std::ostream& out) const
+{
+  out << "L[" << colour << ", " << position << ", ";
+  for (int i = 0; i < 3; i++) {
+    if (i > 0) out << ", ";
+    out << falloff[i];
+  }
+  out << "]";
+  return out;
+}
+
 DiscLight::~DiscLight()
 {
 }
@@ -63,20 +74,20 @@ bool DiscLight::intersect(const Ray& ray, Intersection& j) const
 
 Point3D DiscLight::getPosition() const
 {
-  srand(time(NULL));
-  double e1 = rand() / RAND_MAX;
-  double e2 = rand() / RAND_MAX;
+  double e1 = (double)rand() / (double)RAND_MAX;
+  double e2 = (double)rand() / (double)RAND_MAX;
 
   return Matrix4x4().rotate(e2*360.0, m_normal) * (position + (e1 * m_radius) * m_perp);
 }
 
-std::ostream& operator<<(std::ostream& out, const Light& l)
+std::ostream& DiscLight::toOutput(std::ostream& out) const
 {
-  out << "L[" << l.colour << ", " << l.position << ", ";
+  out << "L[" << colour << ", " << position << ", ";
   for (int i = 0; i < 3; i++) {
     if (i > 0) out << ", ";
-    out << l.falloff[i];
+    out << falloff[i];
   }
+  out << ", " << m_normal << ", " << m_radius;
   out << "]";
   return out;
 }
