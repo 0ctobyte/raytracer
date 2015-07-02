@@ -91,5 +91,5 @@ light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 gr.render(scene,
 	  'yr_tone.png', 512, 512,
 	  {0, 2, -14.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1,light2}, 2, 2)
+	  {0.2,0.2,0.2}, {light1,light2}, 4, 2, 2)
 

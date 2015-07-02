@@ -37,8 +37,10 @@ cone:scale(1.0, 1.0, 2.0)
 
 disc = gr.disc('disc')
 scene:add_child(disc)
-disc:set_material(green_cornell)
-disc:translate(0.0, 4.0, 0.0)
+disc:set_material(mirror)
+disc:translate(-3.0, 7.0, 0.0)
+disc:rotate('y', -45.0)
+disc:rotate('x', -45.0)
 
 -- Room
 room_width = 10.0
@@ -101,5 +103,5 @@ light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 gr.render(scene,
 	  'prim.png', 400, 400,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1, light2}, 2, 1)
+	  {0.2,0.2,0.2}, {light1, light2}, 4, 2, 1)
 

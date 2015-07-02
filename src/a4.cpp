@@ -1,13 +1,15 @@
 #include "a4.hpp"
 #include "image.hpp"
 
+#include <sys/ioctl.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <cstdlib>
 #include <cmath>
 #include <algorithm>
 
 struct RenderThreadData {
-  Image& img;
+  Image* img;
   int ystart, yskip, width, height;
   SceneNode* root;
   Matrix4x4 unproject;
@@ -15,9 +17,11 @@ struct RenderThreadData {
   Colour ambient;
   std::list<Light*> lights;
   unsigned int reflection_level, aa_samples;
-  int* progress;
-  bool* done;
 };
+
+unsigned int progress = 0;
+pthread_mutex_t progress_mut = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t progress_cond = PTHREAD_COND_INITIALIZER;
 
 Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, Point3D eye, Vector3D view, Vector3D up)
 {
@@ -146,9 +150,10 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
 void* a4_render_thread(void* data)
 {
   RenderThreadData d = *static_cast<RenderThreadData*>(data);
+  Image img = *d.img;
 
   int one_percent = d.width * d.height * 0.01;
-  int pixel_count = 0, percentage = 0;
+  int pixel_count = 0;
 
   int samples = (d.aa_samples == 0) ? 1 : d.aa_samples;
   for (int y = d.ystart; y < d.height; y += d.yskip) {
@@ -180,18 +185,21 @@ void* a4_render_thread(void* data)
       double n = samples * samples;
       colour = Colour(colour.R() / n, colour.G() / n, colour.B() / n);
 
-      d.img(x, y, 0) = colour.R();
-      d.img(x, y, 1) = colour.G();
-      d.img(x, y, 2) = colour.B();
+      img(x, y, 0) = colour.R();
+      img(x, y, 1) = colour.G();
+      img(x, y, 2) = colour.B();
 
       if(++pixel_count >= one_percent)
       {
         pixel_count = 0;
-        *d.progress = ++percentage;
+
+        pthread_mutex_lock(&progress_mut);
+        progress++;
+        pthread_cond_signal(&progress_cond);
+        pthread_mutex_unlock(&progress_mut);
       }
     }
   }
-  *d.done = true;
 
   return NULL;
 }
@@ -209,8 +217,10 @@ void a4_render(// What to render
                const Colour& ambient,
                const std::list<Light*>& lights,
                // Optional parameters: Reflection recursive level, antialiasing samples
+               unsigned int num_threads,
                unsigned int reflection_level,
-               unsigned int aa_samples
+               unsigned int aa_samples,
+               unsigned int shadow_samples
                )
 {
   // Fill in raytracing code here.
@@ -235,53 +245,40 @@ void a4_render(// What to render
     
   Image img(width, height, 3);
 
-  int progress1 = 0, progress2 = 0, progress3 = 0, progress4 = 0;
-  bool done1 = false, done2 = false, done3 = false, done4 = false;
-  RenderThreadData data1 = {img, 0, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress1, &done1};
-  RenderThreadData data2 = {img, 1, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress2, &done2};
-  RenderThreadData data3 = {img, 2, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress3, &done3};
-  RenderThreadData data4 = {img, 3, 4, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, &progress4, &done4};
+  if(num_threads == 0) num_threads = 1;
 
-  pthread_t t1, t2, t3, t4;
-
-  int ret = pthread_create(&t1, NULL, a4_render_thread, &data1);
-  if(ret)
+  std::vector<pthread_t> threads(num_threads);
+  std::vector<RenderThreadData> renderData(num_threads);
+  for(unsigned int i = 0; i < num_threads; i++)
   {
-    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
-    exit(EXIT_FAILURE);
+    renderData[i] = (RenderThreadData){&img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples};
+    int ret = pthread_create(&threads[i], NULL, a4_render_thread, &renderData[i]);
+    if(ret)
+    {
+      std::cerr << "Abort: pthread_create (thread " << i << ") failed with error code: " << ret << std::endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
-  ret = pthread_create(&t2, NULL, a4_render_thread, &data2);
-  if(ret)
-  {
-    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
-    exit(EXIT_FAILURE);
-  }
+  // Get dimensions of terminal
+  struct winsize ws;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 
-  ret = pthread_create(&t3, NULL, a4_render_thread, &data3);
-  if(ret)
+  pthread_mutex_lock(&progress_mut);
+  while(progress != 100)
   {
-    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
-    exit(EXIT_FAILURE);
+    pthread_cond_wait(&progress_cond, &progress_mut);
+    int w = ws.ws_col-17;
+    int c = (float)progress/100.0 * w;
+    std::cout << "Progress: " << progress << "% [";
+    for(int i = 0; i < c; i++) std::cout << "=";
+    for(int i = c; i < w; i++) std::cout << " ";
+    std::cout << "]" << "\r" << std::flush;
   }
-
-  ret = pthread_create(&t4, NULL, a4_render_thread, &data4);
-  if(ret)
-  {
-    std::cerr << "Abort: pthread_create failed with error code: " << ret << std::endl;
-    exit(EXIT_FAILURE);
-  }
-
-  while(!done1 || !done2 || !done3 || !done4)
-  {
-    std::cout << "progress: " << progress1+progress2+progress3+progress4 << "% \r" << std::flush;
-  }
+  pthread_mutex_unlock(&progress_mut);
   std::cout << std::endl;
-  
-  pthread_join(t1, NULL);
-  pthread_join(t2, NULL);
-  pthread_join(t3, NULL);
-  pthread_join(t4, NULL);
+
+  for(unsigned int i = 0; i < num_threads; i++) pthread_join(threads[i], NULL);
 
   img.savePng(filename);
   

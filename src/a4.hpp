@@ -19,8 +19,10 @@ void a4_render(// What to render
                const Colour& ambient,
                const std::list<Light*>& lights,
                // Optional parameters: Reflection recursive level, antialiasing samples
+               unsigned int num_threads,
                unsigned int reflection_level,
-               unsigned int aa_samples
+               unsigned int aa_samples,
+               unsigned int shadow_samples
                );
 
 #endif
