@@ -150,7 +150,6 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
 void* a4_render_thread(void* data)
 {
   RenderThreadData d = *static_cast<RenderThreadData*>(data);
-  Image img = *d.img;
 
   int one_percent = d.width * d.height * 0.01;
   int pixel_count = 0;
@@ -185,9 +184,9 @@ void* a4_render_thread(void* data)
       double n = samples * samples;
       colour = Colour(colour.R() / n, colour.G() / n, colour.B() / n);
 
-      img(x, y, 0) = colour.R();
-      img(x, y, 1) = colour.G();
-      img(x, y, 2) = colour.B();
+      (*d.img)(x, y, 0) = colour.R();
+      (*d.img)(x, y, 1) = colour.G();
+      (*d.img)(x, y, 2) = colour.B();
 
       if(++pixel_count >= one_percent)
       {
@@ -234,7 +233,7 @@ void a4_render(// What to render
     if (I != lights.begin()) std::cerr << ", ";
     std::cerr << **I;
   }
-  std::cerr << ", " << reflection_level << ", " << aa_samples << "});" << std::endl;
+  std::cerr << ", " << num_threads << ", " << reflection_level << ", " << aa_samples << ", " << shadow_samples << "});" << std::endl;
 
   // Seed the rng
   srand(time(NULL));
