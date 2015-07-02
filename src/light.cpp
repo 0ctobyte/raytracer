@@ -67,7 +67,7 @@ Point3D DiscLight::getPosition() const
   double e1 = rand() / RAND_MAX;
   double e2 = rand() / RAND_MAX;
 
-  return Matrix4x4().rotate(e2*360.0, m_normal) * (position + (e1 * m_radius) * m_basis[0]);
+  return Matrix4x4().rotate(e2*360.0, m_normal) * (position + (e1 * m_radius) * m_perp);
 }
 
 std::ostream& operator<<(std::ostream& out, const Light& l)

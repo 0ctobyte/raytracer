@@ -63,13 +63,28 @@ protected:
 
 class DiscLight : Light {
 public:
-  DiscLight(const Colour& col, const Point3D& pos, double* foff, double radius, const Vector3D* basis)
+  DiscLight(const Colour& col, const Point3D& pos, double* foff, double radius, const Vector3D& normal)
     : Light(col, pos, foff)
     , m_radius(radius)
+    , m_normal(normal.normalized())
   {
-    m_basis[0] = basis[0].normalized();
-    m_basis[1] = basis[1].normalized();
-    m_normal = basis[0].cross(basis[1]).normalized();
+    // Find a perpendicular vector to the normal on the plane
+    // This technique is described by Hughes and Moller in their paper:
+    // “Building an Orthonormal Basis from a Unit Vector”
+    if(m_normal[2] <= m_normal[0] && m_normal[2] <= m_normal[1])
+    {
+      m_perp = Vector3D(-m_normal[1], m_normal[0], 0.0);
+    }
+    else if(m_normal[1] <= m_normal[0])
+    {
+      m_perp = Vector3D(-m_normal[2], 0.0, m_normal[0]);
+    }
+    else
+    {
+      m_perp = Vector3D(0.0, -m_normal[2], m_normal[1]);
+    }
+
+    m_perp.normalize();
   }
   ~DiscLight();
 
@@ -83,8 +98,8 @@ public:
 
 private:
   double m_radius;
-  Vector3D m_basis[2];
   Vector3D m_normal;
+  Vector3D m_perp;
 };
 
 #endif

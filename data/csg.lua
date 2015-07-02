@@ -122,5 +122,5 @@ gr.render(scene,
 	  'csg.png', 512, 512,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
 	  {0.3,0.3,0.3}, {light1, light2},
-    4, 2, 1)
+    4, 4, 2)
 
