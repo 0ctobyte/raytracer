@@ -80,5 +80,5 @@ light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 gr.render(scene,
 	  'yr_reflect.png', 1024, 1024,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1, light2}, 8, 4, 4)
+	  {0.2,0.2,0.2}, {light1, light2}, 4, 4, 4)
 
