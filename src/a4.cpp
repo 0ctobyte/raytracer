@@ -52,7 +52,7 @@ Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, P
   return unproject;
 }
 
-Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
+Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, const Point3D& light_pos)
 {
   Point3D surface_point = i.q;
   Vector3D normal = i.n.normalized();
@@ -60,7 +60,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
     
   // Set up the parameters for the lights
   // Calculate the vector from the surface point to the light source
-  Vector3D surface_to_light = light->position - surface_point;
+  Vector3D surface_to_light = light_pos - surface_point;
   double distance_to_light = surface_to_light.length(); 
   surface_to_light.normalize();
 
@@ -69,7 +69,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
   double diffuse_brightness = std::max(0.0, normal.dot(surface_to_light)); 
 
   // Calculate the diffuse colour component
-  Colour diffuse = diffuse_brightness * material->diffuse() * light->colour;
+  Colour diffuse = diffuse_brightness * material->diffuse() * light->getColour();
 
   // Calculate the angle of reflectance
   // The incidence vector is the vector surface_to_light but in the opposite direction
@@ -84,19 +84,16 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light)
   double specular_brightness = (diffuse_brightness > 0) ? pow(std::max(0.0, surface_to_eye.dot(reflected)), material->shininess()) : 0.0;
 
   // Calculate the specular colour component
-  Colour specular = specular_brightness * material->specular() * light->colour;
+  Colour specular = specular_brightness * material->specular() * light->getColour();
 
-  // Calculate attenuation factor
-  double attenuation = 1.0 / (light->falloff[0] + light->falloff[1]*distance_to_light + light->falloff[2]*(distance_to_light*distance_to_light));
-
-  return attenuation * (diffuse + specular);
+  return light->getAttenuation(distance_to_light) * (diffuse + specular);
 }
 
 Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, const Point3D& hit, const Intersection& i)
 {
   // Cast shadow rays to the light source. If the ray intersects an object before reaching the light
   // source then don't count that light sources contribution since it is being blocked
-  Point3D light_pos = light->position;
+  Point3D light_pos = light->getPosition();
   Ray shadow(hit, light_pos-hit);
   Intersection u;
   
@@ -105,7 +102,7 @@ Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, 
 
   // Perform phong shading at intersection point. The ambient factor is essentially 1 / number of lights.
   // This is so that the ambient light is not added to the final colour multiple times (one time for each light source)
-  return a4_lighting(ray, i, light);
+  return a4_lighting(ray, i, light, light_pos);
 }
 
 Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, unsigned int recurse_level, unsigned int samples)

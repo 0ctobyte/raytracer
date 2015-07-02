@@ -609,11 +609,11 @@ int gr_light_cmd(lua_State* L)
   Light l;
 
   double col[3];
-  get_tuple(L, 1, &l.position[0], 3);
+  get_tuple(L, 1, &l.getPosition()[0], 3);
   get_tuple(L, 2, col, 3);
-  get_tuple(L, 3, l.falloff, 3);
+  get_tuple(L, 3, l.getFalloff(), 3);
 
-  l.colour = Colour(col[0], col[1], col[2]);
+  l.getColour() = Colour(col[0], col[1], col[2]);
   
   data->light = new Light(l);
 
