@@ -23,6 +23,7 @@ struct RenderThreadData {
 unsigned int progress = 0;
 pthread_mutex_t progress_mut = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t progress_cond = PTHREAD_COND_INITIALIZER;
+std::chrono::time_point<std::chrono::system_clock> start;
 
 Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, Point3D eye, Vector3D view, Vector3D up)
 {
@@ -234,6 +235,7 @@ void a4_render(// What to render
                )
 {
   // Fill in raytracing code here.
+  start = std::chrono::system_clock::now();
 
   std::cerr << "Stub: a4_render(" << root << ",\n     "
             << filename << ", " << width << ", " << height << ",\n     "
@@ -252,11 +254,12 @@ void a4_render(// What to render
     
   Image img(width, height, 3);
 
+
   // Flatten the scene hierarchy
   root->flatten();
 
   if(num_threads == 0) num_threads = 1;
-  
+
   std::vector<pthread_t> threads(num_threads);
   std::vector<RenderThreadData> renderData(num_threads);
   for(unsigned int i = 0; i < num_threads; i++)
@@ -278,12 +281,14 @@ void a4_render(// What to render
   while(progress != 100)
   {
     pthread_cond_wait(&progress_cond, &progress_mut);
-    int w = ws.ws_col-17;
+    std::chrono::duration<double> duration = std::chrono::system_clock::now() - start;
+    int w = ws.ws_col-30;
     int c = (float)progress/100.0 * w;
+    int min = duration.count() / 60.0;
     std::cout << "Progress: " << progress << "% [";
     for(int i = 0; i < c; i++) std::cout << "=";
     for(int i = c; i < w; i++) std::cout << " ";
-    std::cout << "]" << "\r" << std::flush;
+    std::cout << "] " << min << "m" << duration.count() - min << "s" << "\r" << std::flush;
   }
   pthread_mutex_unlock(&progress_mut);
   std::cout << std::endl;
