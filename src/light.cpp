@@ -71,11 +71,10 @@ bool DiscLight::intersect(const Ray& ray, Intersection& j) const
   return true;
 }
 
-Point3D DiscLight::getPosition(std::mt19937& gen) const
+Point3D DiscLight::getPosition(const std::function<double()> uniform) const
 {
-  std::uniform_real_distribution<double> uniform(0, 1);
-  double e1 = uniform(gen);
-  double e2 = uniform(gen);
+  double e1 = uniform();
+  double e2 = uniform();
 
   return Matrix4x4().rotate(e2*360.0, m_normal) * (position + (e1 * m_radius) * m_perp);
 }

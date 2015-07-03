@@ -4,7 +4,7 @@
 #include "scene.hpp"
 #include "algebra.hpp"
 #include <iosfwd>
-#include <random>
+#include <functional>
 
 // Represents a simple point light.
 class Light : public Primitive {
@@ -25,7 +25,7 @@ public:
     return colour;
   }
 
-  virtual Point3D getPosition(std::mt19937& gen) const
+  virtual Point3D getPosition(const std::function<double()> uniform) const
   {
     return position;
   }
@@ -86,7 +86,7 @@ public:
     return false;
   }
 
-  virtual Point3D getPosition(std::mt19937& gen) const; 
+  virtual Point3D getPosition(const std::function<double()> uniform) const; 
   virtual bool intersect(const Ray& ray, Intersection& j) const;
 
   virtual std::ostream& toOutput(std::ostream& out) const;
