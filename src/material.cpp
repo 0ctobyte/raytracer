@@ -30,8 +30,8 @@ const Colour PhongMaterial::diffuse(double u, double v) const
 {
   if(!m_has_texture) return diffuse();
 
-  int x = u*m_texture.width();
-  int y = v*m_texture.height();
+  int x = u * (double)m_texture.width();
+  int y = v * (double)m_texture.height();
 
   return Colour(m_texture(x, y, 0), m_texture(x, y, 1), m_texture(x, y, 2));
 }

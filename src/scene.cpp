@@ -127,8 +127,9 @@ bool GeometryNode::intersect(const Ray& ray, Intersection& i) const
   bool intersects = m_primitive->intersect(r, k);
   if(intersects) 
   {
-    i.q = m_trans * k.q;
-    i.n = transNorm(m_invtrans, k.n);
+    i = k;
+    i.q = m_trans * i.q;
+    i.n = transNorm(m_invtrans, i.n);
     i.m = m_material;
   }
 

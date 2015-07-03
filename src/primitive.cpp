@@ -123,6 +123,8 @@ bool NonhierSphere::intersect(const Ray& ray, Intersection& j) const
     if(t < 0) return false;
     j.q = ray.origin() + t*ray.direction();
     j.n = (j.q - m_pos).normalized();
+    j.u = (atan2(-(j.q[2]-m_pos[2]), j.q[0]-m_pos[0]) + M_PI) / (2 * M_PI);
+    j.v = acos(-(j.q[1]-m_pos[1]) / m_radius) / M_PI;
     return true;
   }
   

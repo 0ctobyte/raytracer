@@ -612,7 +612,7 @@ public:
     , m(other.m)
     , isLight(other.isLight)
     , lightColour(other.lightColour)
-    , u(0.0), v(0.0)
+    , u(other.u), v(other.v)
     //, t(other.t)
   {}
 
