@@ -5,15 +5,23 @@ require('materials')
 -- Scene root
 scene = gr.node('scene')
 
-radius = 3
+radius = 3.0
 sphere = gr.sphere('s')
 scene:add_child(sphere)
-sphere:set_material(white_cornell)
+sphere:set_material(mirror)
 sphere:set_texture("textures/earthmap1k.png")
 sphere:translate(0, radius, 0)
-sphere:rotate('y', 45.0)
-sphere:rotate('x', 45.0)
+sphere:rotate('x', 90.0)
 sphere:scale(radius, radius, radius)
+
+--radius = 1.5
+--cylinder = gr.cylinder('c')
+--scene:add_child(cylinder)
+--cylinder:set_material(white_cornell)
+--cylinder:set_texture("textures/blackmetal.png")
+--cylinder:translate(0, radius, 0)
+--cylinder:rotate('y', 45)
+--cylinder:scale(radius, radius, radius*2)
 
 -- Room
 room_width = 10.0

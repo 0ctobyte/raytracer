@@ -123,8 +123,8 @@ bool NonhierSphere::intersect(const Ray& ray, Intersection& j) const
     if(t < 0) return false;
     j.q = ray.origin() + t*ray.direction();
     j.n = (j.q - m_pos).normalized();
-    j.u = (atan2(-(j.q[2]-m_pos[2]), j.q[0]-m_pos[0]) + M_PI) / (2 * M_PI);
-    j.v = acos(-(j.q[1]-m_pos[1]) / m_radius) / M_PI;
+    j.u = (atan2(-j.n[2], j.n[0]) + M_PI) / (2 * M_PI);
+    j.v = acos(-j.n[1] / m_radius) / M_PI;
     return true;
   }
   
@@ -235,6 +235,7 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   // For this case we take the smallest root greater than 0 to find the nearest intersection point
   // If the roots are negative then the cylinder is behind the ray
   double t = std::numeric_limits<double>::infinity();
+  double U, V;
   Vector3D N;
   bool intersected = false;
   if(num_roots > 0)
@@ -259,7 +260,10 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
       {
         // The normal is essentially the vector from the center point to the intersection point removing the component
         // corresponding to the axis which the cylinder is aligned (the Z axis in this case)
+        // While we are at it, lets just calculate the U, V texture coordinates
         N = (ray.origin() + t*ray.direction())-m_pos;
+        U = acos(Vector3D(N[0], N[1], 0.0).normalized().dot(Vector3D(1.0, 0.0, 0.0))) / (2 * M_PI);
+        V = N[2] / m_height + 0.5;
         N[2] = 0.0;
 
         intersected = true;
@@ -268,18 +272,21 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   }
 
   // We must test for intersection with the endcaps regardless whether the ray intersects the body of the cylinder
-  Point3D V(v[0], v[1], v[2]);
-  Ray rends(V, ray.direction());
+  Point3D ray_o(v[0], v[1], v[2]);
+  Ray rends(ray_o, ray.direction());
   Intersection iends;
   
   NonhierDisc dmin(Point3D(0.0, 0.0, zmin), m_radius);
   if(dmin.intersect(rends, iends))
   {
-    double tzmin = (iends.q[0] - V[0]) / rends.direction()[0];
+    double tzmin = (iends.q[0] - ray_o[0]) / rends.direction()[0];
     if(tzmin < t)
     {
       t = tzmin;
+      Vector3D Q = ray_o + t*ray.direction();
       N = Vector3D(0.0, 0.0, -1.0);
+      U = Q[0] / (2.0*m_radius) + 0.5;
+      V = Q[1] / (2.0*m_radius) + 0.5;
       intersected = true;
     }
   }
@@ -288,11 +295,14 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   NonhierDisc dmax(Point3D(0.0, 0.0, zmax), m_radius);
   if(dmax.intersect(rends, iends))
   {
-    double tzmax = (iends.q[0] - V[0]) / rends.direction()[0];
+    double tzmax = (iends.q[0] - ray_o[0]) / rends.direction()[0];
     if(tzmax < t)
     {
       t = tzmax;
+      Vector3D Q = ray_o + t*ray.direction();
       N = Vector3D(0.0, 0.0, 1.0);
+      U = Q[0] / (2.0*m_radius) + 0.5;
+      V = Q[1] / (2.0*m_radius) + 0.5;
       intersected = true;
     }
   }
@@ -301,6 +311,8 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   {
     j.q = ray.origin() + t*ray.direction();
     j.n = N.normalized();
+    j.u = U;
+    j.v = V;
   }
 
   return intersected;

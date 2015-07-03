@@ -30,9 +30,25 @@ const Colour PhongMaterial::diffuse(double u, double v) const
 {
   if(!m_has_texture) return diffuse();
 
-  int x = u * (double)m_texture.width();
-  int y = v * (double)m_texture.height();
+  double di = u * (double)(m_texture.width()-1);
+  double dj = v * (double)(m_texture.height()-1);
 
-  return Colour(m_texture(x, y, 0), m_texture(x, y, 1), m_texture(x, y, 2));
+  int i = di;
+  int j = dj;
+
+  // Wrap around if the coordinates are out of bounds
+  int i1 = ((i+1) >= m_texture.width()) ? 0 : i+1;
+  int j1 = ((j+1) >= m_texture.height()) ? 0 : j+1;
+
+  // Get the barycentric coordinates between pixels
+  double up = di - i;
+  double vp = dj - j;
+
+  // Bilinear interpolation between pixel values, basically a weighted average of the sourrounding pixels
+  // using the barycentric coordinates up, vp
+  return (1-up)*(1-vp)*Colour(m_texture(i, j, 0), m_texture(i, j, 1), m_texture(i, j, 2)) +
+    (1-up)*(vp)*Colour(m_texture(i, j1, 0), m_texture(i, j1, 1), m_texture(i, j1, 2)) +
+    (up)*(1-vp)*Colour(m_texture(i1, j, 0), m_texture(i1, j, 1), m_texture(i1, j, 2)) +
+    (up)*(vp)*Colour(m_texture(i1, j1, 0), m_texture(i1, j1, 1), m_texture(i1, j1, 2));
 }
 
