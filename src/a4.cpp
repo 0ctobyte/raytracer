@@ -290,7 +290,7 @@ void a4_render(// What to render
     std::cout << "Progress: " << progress << "% [";
     for(int i = 0; i < c; i++) std::cout << "=";
     for(int i = c; i < w; i++) std::cout << " ";
-    std::cout << "] " << min << "m" << duration.count() - min << "s" << "\r" << std::flush;
+    std::cout << "] " << min << "m" << duration.count() - (min*60.0) << "s" << "\r" << std::flush;
   }
   pthread_mutex_unlock(&progress_mut);
   std::cout << std::endl;
