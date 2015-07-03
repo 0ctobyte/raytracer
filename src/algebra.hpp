@@ -603,6 +603,7 @@ public:
     , m(NULL)
     , isLight(false)
     , lightColour(0.0, 0.0, 0.0)
+    , u(0.0), v(0.0)
     //, t(std::numeric_limits<double>::infinity())
   {}
   Intersection(const Intersection& other)
@@ -611,6 +612,7 @@ public:
     , m(other.m)
     , isLight(other.isLight)
     , lightColour(other.lightColour)
+    , u(0.0), v(0.0)
     //, t(other.t)
   {}
 
@@ -619,6 +621,7 @@ public:
   const Material *m; // Material properties at intersection point
   bool isLight; // True if intersection with a light object
   Colour lightColour; // If intersect with light, then this is the colour of the light
+  double u, v; // Parametric coordinates
   //double t; // Distance from ray's origin along ray's direction vector to intersection point: t*ray.direction + ray.origin
 };
 

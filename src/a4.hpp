@@ -11,7 +11,7 @@ void a4_render(// What to render
                // Where to output the image
                const std::string& filename,
                // Image size
-               int width, int height,
+               unsigned int width, unsigned int height,
                // Viewing parameters
                const Point3D& eye, const Vector3D& view,
                const Vector3D& up, double fov,

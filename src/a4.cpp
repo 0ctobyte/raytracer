@@ -12,7 +12,7 @@
 
 struct RenderThreadData {
   Image* img;
-  int ystart, yskip, width, height;
+  unsigned int ystart, yskip, width, height;
   SceneNode* root;
   Matrix4x4 unproject;
   Point3D eye;
@@ -60,6 +60,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, co
   Point3D surface_point = i.q;
   Vector3D normal = i.n.normalized();
   const PhongMaterial *material = dynamic_cast<const PhongMaterial*>(i.m);
+  Colour material_diffuse = material->diffuse(i.u, i.v);
     
   // Set up the parameters for the lights
   // Calculate the vector from the surface point to the light source
@@ -72,7 +73,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, co
   double diffuse_brightness = std::max(0.0, normal.dot(surface_to_light)); 
 
   // Calculate the diffuse colour component
-  Colour diffuse = diffuse_brightness * material->diffuse() * light->getColour();
+  Colour diffuse = diffuse_brightness * material_diffuse * light->getColour();
 
   // Calculate the vector from the eye point to the surface point
   Vector3D surface_to_eye = (ray.origin() - surface_point).normalized();
@@ -121,9 +122,10 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
 
     // Add the ambient colour to the object
     const PhongMaterial* material = dynamic_cast<const PhongMaterial*>(i.m);
-    colour = ambient * material->diffuse();
+    Colour diffuse = material->diffuse(i.u, i.v);
+    colour = ambient * diffuse;
 
-    if(material->diffuse() != Colour(0.0, 0.0, 0.0))
+    if(diffuse != Colour(0.0, 0.0, 0.0))
     {
       for(auto light : lights)
       {
@@ -169,8 +171,8 @@ void* a4_render_thread(void* data)
 
   unsigned int shadow_samples = (d.shadow_samples == 0) ? 1 : d.shadow_samples;
   unsigned int aa_samples = (d.aa_samples == 0) ? 1 : d.aa_samples;
-  for (int y = d.ystart; y < d.height; y += d.yskip) {
-    for (int x = 0; x < d.width; x++) {
+  for (unsigned int y = d.ystart; y < d.height; y += d.yskip) {
+    for (unsigned int x = 0; x < d.width; x++) {
       // Background colour. a4_trace_ray returns this if no intersections
       Colour bg = ((x+y) & 0x10) ? (double)y/d.height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
 
@@ -222,7 +224,7 @@ void a4_render(// What to render
                // Where to output the image
                const std::string& filename,
                // Image size
-               int width, int height,
+               unsigned int width, unsigned int height,
                // Viewing parameters
                const Point3D& eye, const Vector3D& view,
                const Vector3D& up, double fov,
@@ -284,13 +286,14 @@ void a4_render(// What to render
   {
     pthread_cond_wait(&progress_cond, &progress_mut);
     std::chrono::duration<double> duration = std::chrono::system_clock::now() - start;
-    int w = ws.ws_col-30;
+    int w = ws.ws_col-35;
     int c = (float)progress/100.0 * w;
     int min = duration.count() / 60.0;
+    int hours = (double)min / 60.0;
     std::cout << "Progress: " << progress << "% [";
     for(int i = 0; i < c; i++) std::cout << "=";
     for(int i = c; i < w; i++) std::cout << " ";
-    std::cout << "] " << min << "m" << duration.count() - (min*60.0) << "s" << "\r" << std::flush;
+    std::cout << "] " << hours << "h" << min - (hours*60.0) << "m" << duration.count() - (min*60.0) << "s" << "\r" << std::flush;
   }
   pthread_mutex_unlock(&progress_mut);
   std::cout << std::endl;

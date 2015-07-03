@@ -45,6 +45,7 @@
 #include "light.hpp"
 #include "a4.hpp"
 #include "mesh.hpp"
+#include "image.hpp"
 
 // Uncomment the following line to enable debugging messages
 // #define GRLUA_ENABLE_DEBUG
@@ -775,6 +776,34 @@ int gr_node_set_material_cmd(lua_State* L)
   return 0;
 }
 
+// Set a node's texture map
+extern "C"
+int gr_node_set_texture_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  GeometryNode* self = dynamic_cast<GeometryNode*>(selfdata->node);
+
+  luaL_argcheck(L, self != 0, 1, "Geometry node expected");
+  
+  PhongMaterial* material = dynamic_cast<PhongMaterial*>(const_cast<Material*>(self->get_material()));
+  luaL_argcheck(L, material != 0, 1, "Node does not have a material");
+ 
+  const char* filename = luaL_checkstring(L, 2);
+
+  Image texture;
+  luaL_argcheck(L, texture.loadPng(filename), 2, "Failed to load png file");
+
+  PhongMaterial* new_material = new PhongMaterial(material, texture);
+
+  self->set_material(new_material);
+
+  return 0;
+}
+
 // Add a scaling transformation to a node.
 extern "C"
 int gr_node_scale_cmd(lua_State* L)
@@ -914,6 +943,7 @@ static const luaL_reg grlib_node_methods[] = {
   {"__gc", gr_node_gc_cmd},
   {"add_child", gr_node_add_child_cmd},
   {"set_material", gr_node_set_material_cmd},
+  {"set_texture", gr_node_set_texture_cmd},
   {"scale", gr_node_scale_cmd},
   {"rotate", gr_node_rotate_cmd},
   {"translate", gr_node_translate_cmd},
