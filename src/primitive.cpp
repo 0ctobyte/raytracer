@@ -419,6 +419,14 @@ bool NonhierBox::intersect(const Ray& ray, Intersection& j) const
   j.q = ray.origin() + t * ray.direction();
   j.n = n;
 
+  int i1, i2;
+  if(fabs(j.n[2]) > fabs(j.n[0]) && fabs(j.n[2]) > fabs(j.n[1])) i1 = 0, i2 = 1;
+  else if(fabs(j.n[1]) > fabs(j.n[0])) i1 = 0, i2 = 2;
+  else i1 = 1, i2 = 2;
+
+  j.u = (j.q[i1] - m_pos[i1]) / m_size;
+  j.v = (j.q[i2] - m_pos[i2]) / m_size;
+
   return true;
 }
 

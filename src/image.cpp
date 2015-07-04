@@ -232,6 +232,7 @@ bool Image::loadPng(const std::string& filename)
 
   m_data = new double[m_width * m_height * m_elements];
 
+  int bytes_per_sample = bit_depth / 8;
   for (int y = 0; y < m_height; y++) {
     for (int x = 0; x < m_width; x++) {
       for (int i = 0; i < m_elements; i++) {
@@ -239,7 +240,7 @@ bool Image::loadPng(const std::string& filename)
 	int index = m_elements * (y * m_width + x) + i;
 	
         long element = 0;
-        for (int j = bit_depth/8 - 1; j >= 0; j--) {
+        for (int j = 0; j < bytes_per_sample; j++) {
           element <<= 8;
           element += row[(x * m_elements + i) * bit_depth/8 + j];
         }

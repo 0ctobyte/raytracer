@@ -1,17 +1,11 @@
 SOURCES = $(wildcard *.cpp)
 OBJECTS = $(SOURCES:.cpp=.o)
 DEPENDS = $(SOURCES:.cpp=.d)
-LDFLAGS = $(shell pkg-config --libs lua5.1) -llua5.1 -lpng
-CPPFLAGS = $(shell pkg-config --cflags lua5.1)
+LDFLAGS = $(shell pkg-config --libs lua5.1) $(shell pkg-config --libs libpng12) 
+CPPFLAGS = $(shell pkg-config --cflags lua5.1) $(shell pkg-config --cflags libpng12)
 CXXFLAGS = $(CPPFLAGS) -std=c++11 -W -Wall -Wno-unused-parameter -g
 CXX = g++
 MAIN = rt
-
-ifeq ($(shell uname), Darwin)
-LDFLAGS = -L/usr/local/opt/libpng12/lib $(shell pkg-config --libs lua5.1) -lpng
-CPPFLAGS = -I/usr/local/opt/libpng12/include $(shell pkg-config --cflags lua5.1)
-CXXFLAGS += -Wno-c++11-extensions
-endif
 
 all: $(MAIN)
 

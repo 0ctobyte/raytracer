@@ -3,28 +3,16 @@
 
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <cmath>
 #include <algorithm>
 #include <chrono>
 #include <random>
 #include <functional>
-
-struct RenderThreadData {
-  Image* img;
-  unsigned int ystart, yskip, width, height;
-  std::shared_ptr<SceneNode> root;
-  Matrix4x4 unproject;
-  Point3D eye;
-  Colour ambient;
-  std::list<std::shared_ptr<Light>> lights;
-  unsigned int reflection_level, aa_samples, shadow_samples;
-};
+#include <thread>
 
 unsigned int progress = 0;
-pthread_mutex_t progress_mut = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t progress_cond = PTHREAD_COND_INITIALIZER;
-std::chrono::time_point<std::chrono::system_clock> start;
+std::mutex progress_mut;
+std::condition_variable progress_cond;
 
 Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, Point3D eye, Vector3D view, Vector3D up)
 {
@@ -158,24 +146,22 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
   return colour;
 }
 
-void* a4_render_thread(void* data)
+void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsigned int width, unsigned int height, std::shared_ptr<SceneNode> root, const Matrix4x4 unproject, const Point3D eye, const Colour ambient, const std::list<std::shared_ptr<Light>> lights, unsigned int reflection_level, unsigned int aa_samples, unsigned int shadow_samples)
 {
   // Seed the rng and set the uniform distribution object
   std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<double> uniform_distribution(0, 1);
   std::function<double()> uniform = std::bind(uniform_distribution, gen);
 
-  RenderThreadData d = *static_cast<RenderThreadData*>(data);
-
-  int one_percent = d.width * d.height * 0.01;
+  int one_percent = width * height * 0.01;
   int pixel_count = 0;
 
-  unsigned int shadow_samples = (d.shadow_samples == 0) ? 1 : d.shadow_samples;
-  unsigned int aa_samples = (d.aa_samples == 0) ? 1 : d.aa_samples;
-  for (unsigned int y = d.ystart; y < d.height; y += d.yskip) {
-    for (unsigned int x = 0; x < d.width; x++) {
+  shadow_samples = (shadow_samples == 0) ? 1 : shadow_samples;
+  aa_samples = (aa_samples == 0) ? 1 : aa_samples;
+  for (unsigned int y = ystart; y < height; y += yskip) {
+    for (unsigned int x = 0; x < width; x++) {
       // Background colour. a4_trace_ray returns this if no intersections
-      Colour bg = ((x+y) & 0x10) ? (double)y/d.height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
+      Colour bg = ((x+y) & 0x10) ? (double)y/height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
 
       // Cast a ray into the scene and get the colour returned
       Colour colour(0.0, 0.0, 0.0);
@@ -188,12 +174,12 @@ void* a4_render_thread(void* data)
           // Unproject the pixel to the projection plane
           double e = uniform();
           Point3D pixel ((double)x + ((double)p + e) / (double)aa_samples, (double)y - ((double)q + e) / (double)aa_samples, 0.0);
-          Point3D p = d.unproject * pixel;
+          Point3D p = unproject * pixel;
 
           // Create the ray with origin at the eye point
-          Ray ray(d.eye, p-d.eye);
+          Ray ray(eye, p-eye);
 
-          colour = colour + a4_trace_ray(ray, d.root, d.lights, d.ambient, bg, uniform, d.reflection_level, shadow_samples);
+          colour = colour + a4_trace_ray(ray, root, lights, ambient, bg, uniform, reflection_level, shadow_samples);
         }
       }
 
@@ -201,23 +187,22 @@ void* a4_render_thread(void* data)
       double n = aa_samples * aa_samples;
       colour = Colour(colour.R() / n, colour.G() / n, colour.B() / n);
 
-      (*d.img)(x, y, 0) = colour.R();
-      (*d.img)(x, y, 1) = colour.G();
-      (*d.img)(x, y, 2) = colour.B();
+      (*img)(x, y, 0) = colour.R();
+      (*img)(x, y, 1) = colour.G();
+      (*img)(x, y, 2) = colour.B();
 
       if(++pixel_count >= one_percent)
       {
+        {
+          std::lock_guard<std::mutex> lock(progress_mut);
+          progress++;
+        }
+        progress_cond.notify_one();
+        
         pixel_count = 0;
-
-        pthread_mutex_lock(&progress_mut);
-        progress++;
-        pthread_cond_signal(&progress_cond);
-        pthread_mutex_unlock(&progress_mut);
       }
     }
   }
-
-  return NULL;
 }
 
 void a4_render(// What to render
@@ -240,7 +225,7 @@ void a4_render(// What to render
                )
 {
   // Fill in raytracing code here.
-  start = std::chrono::system_clock::now();
+  std::chrono::time_point<std::chrono::system_clock> start = std::chrono::system_clock::now();
 
   std::cerr << "Stub: a4_render(" << root.get() << ",\n     "
             << filename << ", " << width << ", " << height << ",\n     "
@@ -264,15 +249,15 @@ void a4_render(// What to render
 
   if(num_threads == 0) num_threads = 1;
 
-  std::vector<pthread_t> threads(num_threads);
-  std::vector<RenderThreadData> renderData(num_threads);
+  std::cout << "Hardware threads: " << std::thread::hardware_concurrency() << ", Threads requested: " << num_threads << std::endl;
+
+  std::vector<std::thread> threads(num_threads);
   for(unsigned int i = 0; i < num_threads; i++)
   {
-    renderData[i] = (RenderThreadData){&img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, shadow_samples};
-    int ret = pthread_create(&threads[i], NULL, a4_render_thread, &renderData[i]);
-    if(ret)
+    threads[i] = std::thread(a4_render_thread, &img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, shadow_samples);
+    if(threads[i].get_id() == std::thread::id())
     {
-      std::cerr << "Abort: pthread_create (thread " << i << ") failed with error code: " << ret << std::endl;
+      std::cerr << "Abort: Failed to create thread " << i << std::endl;
       exit(EXIT_FAILURE);
     }
   }
@@ -281,10 +266,10 @@ void a4_render(// What to render
   struct winsize ws;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
 
-  pthread_mutex_lock(&progress_mut);
+  std::unique_lock<std::mutex> lock(progress_mut);
   while(progress != 100)
   {
-    pthread_cond_wait(&progress_cond, &progress_mut);
+    progress_cond.wait(lock);
     std::chrono::duration<double> duration = std::chrono::system_clock::now() - start;
     int w = ws.ws_col-35;
     int c = (float)progress/100.0 * w;
@@ -295,10 +280,9 @@ void a4_render(// What to render
     for(int i = c; i < w; i++) std::cout << " ";
     std::cout << "] " << hours << "h" << min - (hours*60.0) << "m" << duration.count() - (min*60.0) << "s" << "\r" << std::flush;
   }
-  pthread_mutex_unlock(&progress_mut);
   std::cout << std::endl;
 
-  for(unsigned int i = 0; i < num_threads; i++) pthread_join(threads[i], NULL);
+  for(unsigned int i = 0; i < num_threads; i++) threads[i].join();
 
   img.savePng(filename);
   
