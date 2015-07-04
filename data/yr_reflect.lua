@@ -45,7 +45,7 @@ ceiling:scale(room_width, 1, room_length)
 left_wall = gr.plane('left_wall')
 room:add_child(left_wall)
 left_wall:set_material(green_cornell)
-left_wall:translate(room_width/2.0-1, -1.0, -room_length/1.5)
+left_wall:translate(room_width/2.0-1, room_height/2.0-1, 0.0)
 left_wall:rotate('z', 90)
 left_wall:scale(room_height, 1.0, room_length)
 
@@ -53,7 +53,7 @@ left_wall:scale(room_height, 1.0, room_length)
 right_wall = gr.plane('right_wall')
 room:add_child(right_wall)
 right_wall:set_material(red_cornell)
-right_wall:translate(-room_width/2.0+1, -1.0, -room_length/1.5)
+right_wall:translate(-room_width/2.0+1, room_height/2.0-1.0, 0.0)
 right_wall:rotate('z', -90)
 right_wall:scale(room_height, 1.0, room_length)
 
@@ -61,7 +61,7 @@ right_wall:scale(room_height, 1.0, room_length)
 back_wall = gr.plane('back_wall')
 room:add_child(back_wall)
 back_wall:set_material(white_cornell)
-back_wall:translate(0.0, -1.0, room_length/6)
+back_wall:translate(0.0, room_height/2.0-1.0, room_length/6)
 back_wall:rotate('x', -90.0)
 back_wall:scale(room_width, 1.0, room_height)
 
@@ -78,8 +78,8 @@ light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
 --sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
 
 gr.render(scene,
-	  'yr_reflect.png', 1024, 1024,
+	  'yr_reflect.png', 512, 512,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
 	  {0.2,0.2,0.2}, {light1, light2},
-    4, 4, 4)
+    4, 4, 2)
 

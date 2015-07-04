@@ -448,11 +448,15 @@ bool NonhierPlane::intersect(const Ray& ray, Intersection& j) const
   Point3D P = ray.origin() + t*ray.direction();
 
   // Now we make sure that the intersection point lies within the truncated plane
-  if(P[0] < (m_pos[0]-m_size) || P[0] > (m_pos[0]+m_size)) return false;
-  if(P[2] < (m_pos[2]-m_size) || P[2] > (m_pos[2]+m_size)) return false;
+  double size = m_size / 2.0;
+  if(P[0] < (m_pos[0]-size) || P[0] > (m_pos[0]+size)) return false;
+  if(P[2] < (m_pos[2]-size) || P[2] > (m_pos[2]+size)) return false;
 
   j.q = P;
   j.n = normal;
+
+  j.u = 0.5 + P[0] / m_size;
+  j.v = 0.5 + P[2] / m_size;
 
   return true;
 }
