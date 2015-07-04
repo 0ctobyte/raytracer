@@ -111,7 +111,7 @@ void JointNode::set_joint_y(double min, double init, double max)
   m_joint_y.max = max;
 }
 
-GeometryNode::GeometryNode(const std::string& name, Primitive* primitive)
+GeometryNode::GeometryNode(const std::string& name, std::shared_ptr<Primitive> primitive)
   : SceneNode(name),
     m_primitive(primitive)
 {
@@ -140,7 +140,7 @@ GeometryNode::~GeometryNode()
 {
 }
 
-ConstructiveSolidGeometryNode::ConstructiveSolidGeometryNode(const std::string& name, GeometryNode* A, GeometryNode* B)
+ConstructiveSolidGeometryNode::ConstructiveSolidGeometryNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B)
   : GeometryNode(name, NULL)
   , m_A(A)
   , m_B(B)
@@ -151,7 +151,7 @@ ConstructiveSolidGeometryNode::~ConstructiveSolidGeometryNode()
 {
 }
 
-UnionNode::UnionNode(const std::string& name, GeometryNode* A, GeometryNode* B)
+UnionNode::UnionNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B)
   : ConstructiveSolidGeometryNode(name, A, B)
 {
 }
@@ -178,7 +178,7 @@ UnionNode::~UnionNode()
 {
 }
 
-IntersectionNode::IntersectionNode(const std::string& name, GeometryNode* A, GeometryNode* B)
+IntersectionNode::IntersectionNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B)
   : ConstructiveSolidGeometryNode(name, A, B)
 {
 }
@@ -205,7 +205,7 @@ IntersectionNode::~IntersectionNode()
 {
 }
 
-DifferenceNode::DifferenceNode(const std::string& name, GeometryNode* A, GeometryNode* B)
+DifferenceNode::DifferenceNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B)
   : ConstructiveSolidGeometryNode(name, A, B)
 {
 }

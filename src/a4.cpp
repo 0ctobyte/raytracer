@@ -13,11 +13,11 @@
 struct RenderThreadData {
   Image* img;
   unsigned int ystart, yskip, width, height;
-  SceneNode* root;
+  std::shared_ptr<SceneNode> root;
   Matrix4x4 unproject;
   Point3D eye;
   Colour ambient;
-  std::list<Light*> lights;
+  std::list<std::shared_ptr<Light>> lights;
   unsigned int reflection_level, aa_samples, shadow_samples;
 };
 
@@ -55,12 +55,13 @@ Matrix4x4 a4_get_unproject_matrix(int width, int height, double fov, double d, P
   return unproject;
 }
 
-Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, const Point3D& light_pos)
+Colour a4_lighting(const Ray& ray, const Intersection& i, const std::shared_ptr<Light> light, const Point3D& light_pos)
 {
+  std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
   Point3D surface_point = i.q;
-  Vector3D normal = i.n.normalized();
-  const PhongMaterial *material = dynamic_cast<const PhongMaterial*>(i.m);
+  Vector3D normal = material->bump(i.n.normalized());
   Colour material_diffuse = material->diffuse(i.u, i.v);
+  Colour light_colour = light->getColour();
     
   // Set up the parameters for the lights
   // Calculate the vector from the surface point to the light source
@@ -73,7 +74,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, co
   double diffuse_brightness = std::max(0.0, normal.dot(surface_to_light)); 
 
   // Calculate the diffuse colour component
-  Colour diffuse = diffuse_brightness * material_diffuse * light->getColour();
+  Colour diffuse = diffuse_brightness * material_diffuse * light_colour;
 
   // Calculate the vector from the eye point to the surface point
   Vector3D surface_to_eye = (ray.origin() - surface_point).normalized();
@@ -86,12 +87,12 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const Light* light, co
   double specular_brightness = (diffuse_brightness > 0) ? pow(std::max(0.0, normal.dot(halfway)), material->shininess()) : 0.0;
 
   // Calculate the specular colour component
-  Colour specular = specular_brightness * material->specular() * light->getColour();
+  Colour specular = specular_brightness * material->specular() * light_colour;
 
   return light->getAttenuation(distance_to_light) * (diffuse + specular);
 }
 
-Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, const Point3D& light_pos, const Point3D& hit, const Intersection& i)
+Colour a4_shadow_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const std::shared_ptr<Light> light, const Point3D& light_pos, const Point3D& hit, const Intersection& i)
 {
   // Cast shadow rays to the light source. If the ray intersects an object before reaching the light
   // source then don't count that light sources contribution since it is being blocked
@@ -106,7 +107,7 @@ Colour a4_shadow_ray(const Ray& ray, const SceneNode* root, const Light* light, 
   return a4_lighting(ray, i, light, light_pos);
 }
 
-Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light*>& lights, const Colour& ambient, const Colour& bg, const std::function<double()>& uniform, unsigned int recurse_level, unsigned int shadow_samples)
+Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const std::list<std::shared_ptr<Light>>& lights, const Colour& ambient, const Colour& bg, const std::function<double()>& uniform, unsigned int recurse_level, unsigned int shadow_samples)
 {
   // Test intersection of ray with scene for each light source
   Colour colour = bg;
@@ -121,7 +122,7 @@ Colour a4_trace_ray(const Ray& ray, const SceneNode* root, const std::list<Light
     Point3D hit = i.q + (1e-9)*n;
 
     // Add the ambient colour to the object
-    const PhongMaterial* material = dynamic_cast<const PhongMaterial*>(i.m);
+    std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
     Colour diffuse = material->diffuse(i.u, i.v);
     colour = ambient * diffuse;
 
@@ -220,7 +221,7 @@ void* a4_render_thread(void* data)
 }
 
 void a4_render(// What to render
-               SceneNode* root,
+               std::shared_ptr<SceneNode> root,
                // Where to output the image
                const std::string& filename,
                // Image size
@@ -230,7 +231,7 @@ void a4_render(// What to render
                const Vector3D& up, double fov,
                // Lighting parameters
                const Colour& ambient,
-               const std::list<Light*>& lights,
+               const std::list<std::shared_ptr<Light>>& lights,
                // Optional parameters: Reflection recursive level, antialiasing samples
                unsigned int num_threads,
                unsigned int reflection_level,
@@ -241,14 +242,14 @@ void a4_render(// What to render
   // Fill in raytracing code here.
   start = std::chrono::system_clock::now();
 
-  std::cerr << "Stub: a4_render(" << root << ",\n     "
+  std::cerr << "Stub: a4_render(" << root.get() << ",\n     "
             << filename << ", " << width << ", " << height << ",\n     "
             << eye << ", " << view << ", " << up << ", " << fov << ",\n     "
             << ambient << ",\n     {";
 
-  for (std::list<Light*>::const_iterator I = lights.begin(); I != lights.end(); ++I) {
+  for (std::list<std::shared_ptr<Light>>::const_iterator I = lights.begin(); I != lights.end(); ++I) {
     if (I != lights.begin()) std::cerr << ", ";
-    std::cerr << **I;
+    std::cerr << *I->get();
   }
   std::cerr << ", " << num_threads << ", " << reflection_level << ", " << aa_samples << ", " << shadow_samples << "});" << std::endl;
 
@@ -257,7 +258,6 @@ void a4_render(// What to render
   Matrix4x4 unproject = a4_get_unproject_matrix(width, height, fov, d, eye, view, up);
     
   Image img(width, height, 3);
-
 
   // Flatten the scene hierarchy
   root->flatten();

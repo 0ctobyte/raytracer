@@ -2,6 +2,7 @@
 #define SCENE_HPP
 
 #include <list>
+#include <memory>
 #include "algebra.hpp"
 #include "primitive.hpp"
 #include "mesh.hpp"
@@ -27,12 +28,12 @@ public:
     m_invtrans = i;
   }
 
-  void add_child(SceneNode* child)
+  void add_child(std::shared_ptr<SceneNode> child)
   {
     m_children.push_back(child);
   }
 
-  void remove_child(SceneNode* child)
+  void remove_child(std::shared_ptr<SceneNode> child)
   {
     m_children.remove(child);
   }
@@ -61,7 +62,7 @@ protected:
   Matrix4x4 m_invtrans;
 
   // Hierarchy
-  typedef std::list<SceneNode*> ChildList;
+  typedef std::list<std::shared_ptr<SceneNode>> ChildList;
   ChildList m_children;
 };
 
@@ -87,46 +88,46 @@ protected:
 
 class GeometryNode : public SceneNode {
 public:
-  GeometryNode(const std::string& name,
-               Primitive* primitive);
+  GeometryNode(const std::string& name, std::shared_ptr<Primitive> primitive);
   virtual ~GeometryNode();
 
   virtual bool intersect(const Ray& ray, Intersection& i) const;
 
-  const Material* get_material()
+  std::shared_ptr<const Material> get_material()
   {
     return m_material;
   }
-  Material* get_material() const 
+  std::shared_ptr<Material> get_material() const 
   {
     return m_material;
   }
 
-  void set_material(Material* material)
+  void set_material(std::shared_ptr<Material> material)
   {
+    m_material = nullptr;
     m_material = material;
   }
 
 protected:
-  Material* m_material;
-  Primitive* m_primitive;
+  std::shared_ptr<Material> m_material;
+  std::shared_ptr<Primitive> m_primitive;
 };
 
 class ConstructiveSolidGeometryNode : public GeometryNode {
 public:
-  ConstructiveSolidGeometryNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  ConstructiveSolidGeometryNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B);
   virtual ~ConstructiveSolidGeometryNode();
 
   virtual bool intersect(const Ray& ray, Intersection& i) const = 0;
 
 protected:
-  GeometryNode* m_A;
-  GeometryNode* m_B;
+  std::shared_ptr<GeometryNode> m_A;
+  std::shared_ptr<GeometryNode> m_B;
 };
 
 class UnionNode : public ConstructiveSolidGeometryNode {
 public:
-  UnionNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  UnionNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B);
   virtual ~UnionNode();
 
   virtual bool intersect(const Ray& ray, Intersection& i) const;
@@ -134,7 +135,7 @@ public:
 
 class IntersectionNode : public ConstructiveSolidGeometryNode {
 public:
-  IntersectionNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  IntersectionNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B);
   virtual ~IntersectionNode();
 
   virtual bool intersect(const Ray& ray, Intersection& i) const;
@@ -142,7 +143,7 @@ public:
 
 class DifferenceNode : public ConstructiveSolidGeometryNode {
 public:
-  DifferenceNode(const std::string& name, GeometryNode* A, GeometryNode* B);
+  DifferenceNode(const std::string& name, std::shared_ptr<GeometryNode> A, std::shared_ptr<GeometryNode> B);
   virtual ~DifferenceNode();
 
   virtual bool intersect(const Ray& ray, Intersection& i) const;

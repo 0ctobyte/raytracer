@@ -8,7 +8,7 @@ scene = gr.node('scene')
 radius = 3.0
 sphere = gr.sphere('s')
 scene:add_child(sphere)
-sphere:set_material(mirror)
+sphere:set_material(white_cornell)
 sphere:set_texture("textures/earthmap1k.png")
 sphere:translate(0, radius, 0)
 sphere:rotate('x', 90.0)

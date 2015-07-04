@@ -41,6 +41,7 @@
 #include <cstring>
 #include <cstdio>
 #include <vector>
+#include <memory>
 #include "lua488.hpp"
 #include "light.hpp"
 #include "a4.hpp"
@@ -74,19 +75,19 @@
 // The "userdata" type for a node. Objects of this type will be
 // allocated by Lua to represent nodes.
 struct gr_node_ud {
-  SceneNode* node;
+  std::shared_ptr<SceneNode> node;
 };
 
 // The "userdata" type for a material. Objects of this type will be
 // allocated by Lua to represent materials.
 struct gr_material_ud {
-  Material* material;
+  std::shared_ptr<Material> material;
 };
 
 // The "userdata" type for a light. Objects of this type will be
 // allocated by Lua to represent lights.
 struct gr_light_ud {
-  Light* light;
+  std::shared_ptr<Light> light;
 };
 
 // Useful function to retrieve and check an n-tuple of numbers.
@@ -109,10 +110,12 @@ int gr_node_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>)); 
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
-  data->node = new SceneNode(name);
+  data->node = std::make_shared<SceneNode>(name);
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -127,10 +130,12 @@ int gr_joint_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>)); 
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
-  JointNode* node = new JointNode(name);
+  std::shared_ptr<JointNode> node(std::make_shared<JointNode>(name));
 
   double x[3], y[3];
   get_tuple(L, 2, x, 3);
@@ -154,10 +159,12 @@ int gr_sphere_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
   
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Sphere());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Sphere>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -172,10 +179,12 @@ int gr_cylinder_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
   
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Cylinder());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Cylinder>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -190,10 +199,12 @@ int gr_cube_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
   
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Cube());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Cube>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -208,10 +219,12 @@ int gr_plane_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
   
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Plane());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Plane>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -226,10 +239,12 @@ int gr_torus_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Torus());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Torus>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -244,10 +259,12 @@ int gr_cone_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Cone());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Cone>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -262,10 +279,12 @@ int gr_disc_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode(name, new Disc());
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<Disc>());
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -280,7 +299,9 @@ int gr_nh_sphere_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -289,7 +310,7 @@ int gr_nh_sphere_cmd(lua_State* L)
 
   double radius = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierSphere(pos, radius));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierSphere>(pos, radius));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -304,7 +325,9 @@ int gr_nh_cylinder_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -314,7 +337,7 @@ int gr_nh_cylinder_cmd(lua_State* L)
   double radius = luaL_checknumber(L, 3);
   double height = luaL_checknumber(L, 4);
 
-  data->node = new GeometryNode(name, new NonhierCylinder(pos, radius, height));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierCylinder>(pos, radius, height));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -329,7 +352,9 @@ int gr_nh_box_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -338,7 +363,7 @@ int gr_nh_box_cmd(lua_State* L)
 
   double size = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierBox(pos, size));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierBox>(pos, size));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -353,7 +378,9 @@ int gr_nh_plane_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -362,7 +389,7 @@ int gr_nh_plane_cmd(lua_State* L)
 
   double size = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierPlane(pos, size));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierPlane>(pos, size));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -377,7 +404,9 @@ int gr_nh_torus_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -387,7 +416,7 @@ int gr_nh_torus_cmd(lua_State* L)
   double oradius = luaL_checknumber(L, 3);
   double iradius = luaL_checknumber(L, 4);
 
-  data->node = new GeometryNode(name, new NonhierTorus(pos, oradius, iradius));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierTorus>(pos, oradius, iradius));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -402,7 +431,9 @@ int gr_nh_cone_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -411,7 +442,7 @@ int gr_nh_cone_cmd(lua_State* L)
 
   double height = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierCone(pos, height));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierCone>(pos, height));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -426,7 +457,9 @@ int gr_nh_disc_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -435,7 +468,7 @@ int gr_nh_disc_cmd(lua_State* L)
 
   double radius = luaL_checknumber(L, 3);
 
-  data->node = new GeometryNode(name, new NonhierDisc(pos, radius));
+  data->node = std::make_shared<GeometryNode>(name, std::make_shared<NonhierDisc>(pos, radius));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -450,23 +483,25 @@ int gr_csg_union_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
   gr_node_ud* nodedata_a = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
   luaL_argcheck(L, nodedata_a != 0, 2, "Node expected");
 
-  GeometryNode* node_a = dynamic_cast<GeometryNode*>(nodedata_a->node);
-  luaL_argcheck(L, node_a != 0, 2, "Geometry node expected");
+  std::shared_ptr<GeometryNode> node_a = std::dynamic_pointer_cast<GeometryNode>(nodedata_a->node);
+  luaL_argcheck(L, node_a, 2, "Geometry node expected");
 
   gr_node_ud* nodedata_b = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
   luaL_argcheck(L, nodedata_b != 0, 3, "Node expected");
 
-  GeometryNode* node_b = dynamic_cast<GeometryNode*>(nodedata_b->node);
-  luaL_argcheck(L, node_b != 0, 3, "Geometry node expected");
+  std::shared_ptr<GeometryNode> node_b = std::dynamic_pointer_cast<GeometryNode>(nodedata_b->node);
+  luaL_argcheck(L, node_b, 3, "Geometry node expected");
 
-  data->node = new UnionNode(name, node_a, node_b);
+  data->node = std::make_shared<UnionNode>(name, node_a, node_b);
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -481,23 +516,25 @@ int gr_csg_intersection_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
   gr_node_ud* nodedata_a = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
   luaL_argcheck(L, nodedata_a != 0, 2, "Node expected");
 
-  GeometryNode* node_a = dynamic_cast<GeometryNode*>(nodedata_a->node);
-  luaL_argcheck(L, node_a != 0, 2, "Geometry node expected");
+  std::shared_ptr<GeometryNode> node_a = std::dynamic_pointer_cast<GeometryNode>(nodedata_a->node);
+  luaL_argcheck(L, node_a, 2, "Geometry node expected");
 
   gr_node_ud* nodedata_b = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
   luaL_argcheck(L, nodedata_b != 0, 3, "Node expected");
 
-  GeometryNode* node_b = dynamic_cast<GeometryNode*>(nodedata_b->node);
-  luaL_argcheck(L, node_b != 0, 3, "Geometry node expected");
+  std::shared_ptr<GeometryNode> node_b = std::dynamic_pointer_cast<GeometryNode>(nodedata_b->node);
+  luaL_argcheck(L, node_b, 3, "Geometry node expected");
 
-  data->node = new IntersectionNode(name, node_a, node_b);
+  data->node = std::make_shared<IntersectionNode>(name, node_a, node_b);
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -512,30 +549,31 @@ int gr_csg_difference_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
   gr_node_ud* nodedata_a = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
   luaL_argcheck(L, nodedata_a != 0, 2, "Node expected");
 
-  GeometryNode* node_a = dynamic_cast<GeometryNode*>(nodedata_a->node);
-  luaL_argcheck(L, node_a != 0, 2, "Geometry node expected");
+  std::shared_ptr<GeometryNode> node_a = std::dynamic_pointer_cast<GeometryNode>(nodedata_a->node);
+  luaL_argcheck(L, node_a, 2, "Geometry node expected");
 
   gr_node_ud* nodedata_b = (gr_node_ud*)luaL_checkudata(L, 3, "gr.node");
   luaL_argcheck(L, nodedata_b != 0, 3, "Node expected");
 
-  GeometryNode* node_b = dynamic_cast<GeometryNode*>(nodedata_b->node);
-  luaL_argcheck(L, node_b != 0, 3, "Geometry node expected");
+  std::shared_ptr<GeometryNode> node_b = std::dynamic_pointer_cast<GeometryNode>(nodedata_b->node);
+  luaL_argcheck(L, node_b, 3, "Geometry node expected");
 
-  data->node = new DifferenceNode(name, node_a, node_b);
+  data->node = std::make_shared<DifferenceNode>(name, node_a, node_b);
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
 
   return 1;
 }
-
 
 // Create a polygonal mesh node
 extern "C"
@@ -544,7 +582,9 @@ int gr_mesh_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
-  data->node = 0;
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
 
   const char* name = luaL_checkstring(L, 1);
 
@@ -587,9 +627,9 @@ int gr_mesh_cmd(lua_State* L)
     lua_pop(L, 1);
   }
 
-  Mesh* mesh = new Mesh(verts, faces);
-  GRLUA_DEBUG(*mesh);
-  data->node = new GeometryNode(name, mesh);
+  std::shared_ptr<Mesh> mesh(std::make_shared<Mesh>(verts, faces));
+  GRLUA_DEBUG(mesh);
+  data->node = std::make_shared<GeometryNode>(name, mesh);
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);
@@ -604,7 +644,9 @@ int gr_light_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
 
   gr_light_ud* data = (gr_light_ud*)lua_newuserdata(L, sizeof(gr_light_ud));
-  data->light = 0;
+  std::shared_ptr<Light> temp;
+  memcpy(&data->light, &temp, sizeof(std::shared_ptr<Light>));
+  data->light = nullptr;
 
   double col[3];
   double pos[3];
@@ -615,7 +657,7 @@ int gr_light_cmd(lua_State* L)
 
   Light l(Colour(col[0], col[1], col[2]), Point3D(pos[0], pos[1], pos[2]), falloff);
   
-  data->light = new Light(l);
+  data->light = std::make_shared<Light>(l);
 
   luaL_newmetatable(L, "gr.light");
   lua_setmetatable(L, -2);
@@ -630,7 +672,9 @@ int gr_disc_light_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
 
   gr_light_ud* data = (gr_light_ud*)lua_newuserdata(L, sizeof(gr_light_ud));
-  data->light = 0;
+  std::shared_ptr<Light> temp;
+  memcpy(&data->light, &temp, sizeof(std::shared_ptr<Light>));
+  data->light = nullptr;
 
   double col[3];
   double pos[3];
@@ -645,7 +689,7 @@ int gr_disc_light_cmd(lua_State* L)
 
   DiscLight l(Colour(col[0], col[1], col[2]), Point3D(pos[0], pos[1], pos[2]), falloff, Vector3D(normal[0], normal[1], normal[2]), radius);
   
-  data->light = new DiscLight(l);
+  data->light = std::make_shared<DiscLight>(l);
 
   luaL_newmetatable(L, "gr.light");
   lua_setmetatable(L, -2);
@@ -684,7 +728,7 @@ int gr_render_cmd(lua_State* L)
   int light_count = luaL_getn(L, 10);
   
   luaL_argcheck(L, light_count >= 1, 10, "Tuple of lights expected");
-  std::list<Light*> lights;
+  std::list<std::shared_ptr<Light>> lights;
   for (int i = 1; i <= light_count; i++) {
     lua_rawgeti(L, 10, i);
     gr_light_ud* ldata = (gr_light_ud*)luaL_checkudata(L, -1, "gr.light");
@@ -714,7 +758,9 @@ int gr_material_cmd(lua_State* L)
   GRLUA_DEBUG_CALL;
   
   gr_material_ud* data = (gr_material_ud*)lua_newuserdata(L, sizeof(gr_material_ud));
-  data->material = 0;
+  std::shared_ptr<Material> temp;
+  memcpy(&data->material, &temp, sizeof(std::shared_ptr<Material>)); 
+  data->material = nullptr;
   
   double kd[3], ks[3];
   get_tuple(L, 1, kd, 3);
@@ -722,9 +768,7 @@ int gr_material_cmd(lua_State* L)
 
   double shininess = luaL_checknumber(L, 3);
   
-  data->material = new PhongMaterial(Colour(kd[0], kd[1], kd[2]),
-                                     Colour(ks[0], ks[1], ks[2]),
-                                     shininess);
+  data->material = std::make_shared<PhongMaterial>(Colour(kd[0], kd[1], kd[2]), Colour(ks[0], ks[1], ks[2]), shininess);
 
   luaL_newmetatable(L, "gr.material");
   lua_setmetatable(L, -2);
@@ -740,13 +784,15 @@ int gr_node_add_child_cmd(lua_State* L)
   
   gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
   luaL_argcheck(L, selfdata != 0, 1, "Node expected");
-
-  SceneNode* self = selfdata->node;
+  
+  std::shared_ptr<SceneNode> self = selfdata->node;
+  luaL_argcheck(L, self, 1, "Node not constructed");
   
   gr_node_ud* childdata = (gr_node_ud*)luaL_checkudata(L, 2, "gr.node");
   luaL_argcheck(L, childdata != 0, 2, "Node expected");
 
-  SceneNode* child = childdata->node;
+  std::shared_ptr<SceneNode> child = childdata->node;
+  luaL_argcheck(L, childdata != 0, 2, "Node not constructed");
 
   self->add_child(child);
 
@@ -762,14 +808,14 @@ int gr_node_set_material_cmd(lua_State* L)
   gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
   luaL_argcheck(L, selfdata != 0, 1, "Node expected");
 
-  GeometryNode* self = dynamic_cast<GeometryNode*>(selfdata->node);
-
-  luaL_argcheck(L, self != 0, 1, "Geometry node expected");
+  std::shared_ptr<GeometryNode> self = std::dynamic_pointer_cast<GeometryNode>(selfdata->node);
+  luaL_argcheck(L, self, 1, "Geometry node expected");
   
   gr_material_ud* matdata = (gr_material_ud*)luaL_checkudata(L, 2, "gr.material");
   luaL_argcheck(L, matdata != 0, 2, "Material expected");
 
-  Material* material = matdata->material;
+  std::shared_ptr<Material> material = matdata->material;
+  luaL_argcheck(L, material, 2, "Material not constructed");
 
   self->set_material(material);
 
@@ -785,19 +831,47 @@ int gr_node_set_texture_cmd(lua_State* L)
   gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
   luaL_argcheck(L, selfdata != 0, 1, "Node expected");
 
-  GeometryNode* self = dynamic_cast<GeometryNode*>(selfdata->node);
-
-  luaL_argcheck(L, self != 0, 1, "Geometry node expected");
+  std::shared_ptr<GeometryNode> self = std::dynamic_pointer_cast<GeometryNode>(selfdata->node);
+  luaL_argcheck(L, self, 1, "Geometry node expected");
   
-  PhongMaterial* material = dynamic_cast<PhongMaterial*>(const_cast<Material*>(self->get_material()));
-  luaL_argcheck(L, material != 0, 1, "Node does not have a material");
+  std::shared_ptr<PhongMaterial> material = std::dynamic_pointer_cast<PhongMaterial>(std::const_pointer_cast<Material>(self->get_material()));
+  luaL_argcheck(L, material, 1, "Node does not have a material");
  
   const char* filename = luaL_checkstring(L, 2);
 
   Image texture;
   luaL_argcheck(L, texture.loadPng(filename), 2, "Failed to load png file");
 
-  PhongMaterial* new_material = new PhongMaterial(material, texture);
+  std::shared_ptr<PhongMaterial> new_material = std::make_shared<PhongMaterial>(material);
+  new_material->set_texture(texture);
+
+  self->set_material(new_material);
+
+  return 0;
+}
+
+// Set a node's bump map
+extern "C"
+int gr_node_set_bumpmap_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  std::shared_ptr<GeometryNode> self = std::dynamic_pointer_cast<GeometryNode>(selfdata->node);
+  luaL_argcheck(L, self, 1, "Geometry node expected");
+  
+  std::shared_ptr<PhongMaterial> material = std::dynamic_pointer_cast<PhongMaterial>(std::const_pointer_cast<Material>(self->get_material()));
+  luaL_argcheck(L, material, 1, "Node does not have a material");
+ 
+  const char* filename = luaL_checkstring(L, 2);
+
+  Image texture;
+  luaL_argcheck(L, texture.loadPng(filename), 2, "Failed to load png file");
+
+  std::shared_ptr<PhongMaterial> new_material = std::make_shared<PhongMaterial>(material);
+  new_material->set_texture(texture);
 
   self->set_material(new_material);
 
@@ -813,7 +887,8 @@ int gr_node_scale_cmd(lua_State* L)
   gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
   luaL_argcheck(L, selfdata != 0, 1, "Node expected");
 
-  SceneNode* self = selfdata->node;
+  std::shared_ptr<SceneNode> self = selfdata->node;
+  luaL_argcheck(L, self, 1, "Node not constructed");
 
   double values[3];
   
@@ -835,7 +910,8 @@ int gr_node_translate_cmd(lua_State* L)
   gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
   luaL_argcheck(L, selfdata != 0, 1, "Node expected");
 
-  SceneNode* self = selfdata->node;
+  std::shared_ptr<SceneNode> self = selfdata->node;
+  luaL_argcheck(L, self, 1, "Node not constructed");
 
   double values[3];
   
@@ -857,7 +933,8 @@ int gr_node_rotate_cmd(lua_State* L)
   gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
   luaL_argcheck(L, selfdata != 0, 1, "Node expected");
 
-  SceneNode* self = selfdata->node;
+  std::shared_ptr<SceneNode> self = selfdata->node;
+  luaL_argcheck(L, self, 1, "Node not constructed");
 
   const char* axis_string = luaL_checkstring(L, 2);
 
@@ -890,7 +967,7 @@ int gr_node_gc_cmd(lua_State* L)
   // If data->node happened to be a reference-counting pointer, this
   // will in fact just decrease lua's reference to it, so it's not a
   // bad thing to include this line.
-  data->node = 0;
+  data->node = nullptr;
 
   return 0;
 }
@@ -944,6 +1021,7 @@ static const luaL_reg grlib_node_methods[] = {
   {"add_child", gr_node_add_child_cmd},
   {"set_material", gr_node_set_material_cmd},
   {"set_texture", gr_node_set_texture_cmd},
+  {"set_bumpmap", gr_node_set_bumpmap_cmd},
   {"scale", gr_node_scale_cmd},
   {"rotate", gr_node_rotate_cmd},
   {"translate", gr_node_translate_cmd},

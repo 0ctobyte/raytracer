@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <memory>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -600,7 +601,7 @@ public:
   Intersection() 
     : q(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity())
     , n(0.0, 0.0, 0.0)
-    , m(NULL)
+    , m(nullptr)
     , isLight(false)
     , lightColour(0.0, 0.0, 0.0)
     , u(0.0), v(0.0)
@@ -618,7 +619,7 @@ public:
 
   Point3D q; // Intersection point
   Vector3D n; // Surface normal at intersection point
-  const Material *m; // Material properties at intersection point
+  std::shared_ptr<const Material> m; // Material properties at intersection point
   bool isLight; // True if intersection with a light object
   Colour lightColour; // If intersect with light, then this is the colour of the light
   double u, v; // Parametric coordinates

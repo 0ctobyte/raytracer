@@ -2,12 +2,13 @@
 #define CS488_A4_HPP
 
 #include <string>
+#include <memory>
 #include "algebra.hpp"
 #include "scene.hpp"
 #include "light.hpp"
 
 void a4_render(// What to render
-               SceneNode* root,
+               std::shared_ptr<SceneNode> root,
                // Where to output the image
                const std::string& filename,
                // Image size
@@ -17,7 +18,7 @@ void a4_render(// What to render
                const Vector3D& up, double fov,
                // Lighting parameters
                const Colour& ambient,
-               const std::list<Light*>& lights,
+               const std::list<std::shared_ptr<Light>>& lights,
                // Optional parameters: Reflection recursive level, antialiasing samples
                unsigned int num_threads,
                unsigned int reflection_level,
