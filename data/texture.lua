@@ -7,13 +7,13 @@ scene = gr.node('scene')
 
 radius = 3.0
 
---sphere = gr.sphere('s')
---scene:add_child(sphere)
---sphere:set_material(white_cornell)
---sphere:set_texture("textures/earthmap1k.png")
---sphere:translate(0, radius, 0)
---sphere:rotate('x', 90.0)
---sphere:scale(radius, radius, radius)
+sphere = gr.sphere('s')
+scene:add_child(sphere)
+sphere:set_material(white_cornell)
+sphere:set_texture("textures/earthmap1k.png")
+sphere:translate(0, radius, 0)
+sphere:rotate('x', 90.0)
+sphere:scale(radius, radius, radius)
 
 --radius = 1.5
 --cylinder = gr.cylinder('c')
@@ -24,15 +24,37 @@ radius = 3.0
 --cylinder:rotate('y', 45)
 --cylinder:scale(radius, radius, radius*2)
 
-box = gr.cube('b')
-scene:add_child(box)
-box:set_material(white_cornell)
-box:set_texture("textures/crate2_diffuse.png")
-box:translate(0, radius, 0)
-box:rotate('y', 45)
-box:rotate('x', 45)
-box:scale(radius, radius, radius)
-box:translate(-0.5, -0.5, -0.5)
+--box = gr.cube('b')
+--scene:add_child(box)
+--box:set_material(white_cornell)
+--box:set_texture("textures/crate2_diffuse.png")
+--box:translate(0, radius, 0)
+--box:rotate('y', 45)
+--box:rotate('x', 45)
+--box:scale(radius, radius, radius)
+--box:translate(-0.5, -0.5, -0.5)
+
+--torus = gr.torus('t')
+--scene:add_child(torus)
+--torus:set_material(white_cornell)
+--torus:set_texture("textures/blackmetal.png")
+--torus:translate(0, radius, 0)
+--torus:rotate('x', 45)
+--torus:scale(radius/2, radius/2, radius/2)
+
+--disc = gr.disc('d')
+--scene:add_child(disc)
+--disc:set_material(white_cornell)
+--disc:set_texture("textures/blackmetal.png")
+--disc:translate(0, radius, 0)
+--disc:scale(radius/2.0, radius/2.0, radius/2.0)
+
+--cone = gr.cone('cone')
+--scene:add_child(cone)
+--cone:set_material(white_cornell)
+--cone:set_texture("textures/blackmetal.png")
+--cone:translate(0, 0, 0)
+--cone:scale(radius/2.0, radius/2.0, radius)
 
 -- Room
 room_width = 10.0

@@ -181,6 +181,9 @@ bool NonhierCone::intersect(const Ray& ray, Intersection& j) const
         // If so, we check if the intersection point is closer than any other intersection points
         Point3D Q = ray.origin() + t*ray.direction();
         Vector3D N(2*Q[0], 2*Q[1], -2*Q[2]);
+        
+        double U = acos(Vector3D(Q[0]-m_pos[0], Q[1]-m_pos[1], 0.0).normalized().dot(Vector3D(1.0, 0.0, 0.0))) / M_PI;
+        double V = (Q[2]-m_pos[2]) / zmin;
      
         int signz1 = ((z1-zmin) > 0) ? 1 : 0;
         int signz2 = ((z2-zmin) > 0) ? 1 : 0;
@@ -194,6 +197,8 @@ bool NonhierCone::intersect(const Ray& ray, Intersection& j) const
         // To find the normal we just take the gradient and plug the coordinate values for the intersection point into the gradient result
         j.q = Q;
         j.n = N.normalized();
+        j.u = U;
+        j.v = V;
 
         return true;
       }
@@ -262,7 +267,7 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
         // corresponding to the axis which the cylinder is aligned (the Z axis in this case)
         // While we are at it, lets just calculate the U, V texture coordinates
         N = (ray.origin() + t*ray.direction())-m_pos;
-        U = acos(Vector3D(N[0], N[1], 0.0).normalized().dot(Vector3D(1.0, 0.0, 0.0))) / (2 * M_PI);
+        U = acos(Vector3D(N[0], N[1], 0.0).normalized().dot(Vector3D(1.0, 0.0, 0.0))) / M_PI;
         V = N[2] / m_height + 0.5;
         N[2] = 0.0;
 
@@ -519,6 +524,12 @@ bool NonhierTorus::intersect(const Ray& ray, Intersection& j) const
   j.q = Q;
   j.n = Vector3D(nx, ny, nz).normalized();
 
+  double theta = asin((Q[2]-m_pos[2]) / m_iradius);
+  double phi = asin((Q[1]-m_pos[1]) / (m_oradius + m_iradius*cos(theta)));
+
+  j.u = 0.5 + phi / M_PI;
+  j.v = 0.5 + theta / M_PI;
+
   return true;
 }
 
@@ -548,6 +559,9 @@ bool NonhierDisc::intersect(const Ray& ray, Intersection& j) const
   // Flip the normal if the backface is facing the ray
   j.q = Q;
   j.n = ((ray.origin() - m_pos).dot(n) < 0) ? -n : n;
+
+  j.u = (Q[0]-m_pos[0]) / (2.0*m_radius) + 0.5;
+  j.v = (Q[1]-m_pos[1]) / (2.0*m_radius) + 0.5;
 
   return true;
 }
