@@ -14,11 +14,11 @@ This was written for an assignment for the CS 488 course at the University of Wa
 - Torus
 - Disc
 
-![Soft shadows](prim.ss.png)
+![Soft shadows](prim.ss.512.png)
 
 ### Constructive Solid Geometry
-![CSG](csg.png)
+![CSG](csg.512.png)
 
 ### Texture Mapping
-![Texture mapping](texture.png)
+![Texture mapping](texture.512.png)
 
