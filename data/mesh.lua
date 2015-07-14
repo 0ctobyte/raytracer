@@ -8,7 +8,7 @@ require('readobj')
 -- Scene root
 scene = gr.node('scene')
 
-radius = 3.0
+radius = 2.0
 
 suzanne = gr.mesh('suzanne', readobj("objs/suzanne_n.obj"))
 scene:add_child(suzanne)
