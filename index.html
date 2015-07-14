@@ -45,17 +45,12 @@
               <ul class="nav navbar-nav">
                 <li class="active"><a href="#">Home</a></li>
                 <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
                 <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Dropdown <span class="caret"></span></a>
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Objectives <span class="caret"></span></a>
                   <ul class="dropdown-menu">
-                    <li><a href="#">Action</a></li>
-                    <li><a href="#">Another action</a></li>
-                    <li><a href="#">Something else here</a></li>
-                    <li role="separator" class="divider"></li>
-                    <li class="dropdown-header">Nav header</li>
-                    <li><a href="#">Separated link</a></li>
-                    <li><a href="#">One more separated link</a></li>
+                    <li><a href="#PRIM">Primitives</a></li>
+                    <li><a href="#CSG">Constructive Solid Geometry</a></li>
+                    <li><a href="#SS">Soft Shadows</a></li>
                   </ul>
                 </li>
               </ul>
@@ -78,7 +73,7 @@
       </ol>
       <div class="carousel-inner" role="listbox">
         <div class="item active">
-          <img class="first-slide" src="images/prim.512.png" alt="First slide">
+          <img class="first-slide" src="images/prim.ss.512.png" alt="First slide">
           <div class="container">
             <div class="carousel-caption">
               <h1>Ray Tracer </h1>
@@ -90,7 +85,7 @@
           <img class="second-slide" src="images/csg.512.png" alt="Second slide">
         </div>
         <div class="item">
-          <img class="third-slide" src="images/prim.ss.512.png" alt="Third slide">
+          <img class="third-slide" src="images/prim.512.png" alt="Third slide">
         </div>
       </div>
       <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
@@ -114,7 +109,7 @@
 
       <hr class="featurette-divider">
 
-      <div class="row featurette">
+      <div id="PRIM" class="row featurette">
         <div class="col-md-7">
           <h2 class="featurette-heading">Primitives </h2>
           <p class="lead">Implemented extra primitives such as cones, cylinders, discs and torus'.</p>
@@ -126,7 +121,7 @@
 
       <hr class="featurette-divider">
 
-      <div class="row featurette">
+      <div id="CSG" class="row featurette">
         <div class="col-md-7 col-md-push-5">
           <h2 class="featurette-heading">Constructive Solid Geometry <!-- <span class="text-muted">See for yourself.</span> --></h2>
           <p class="lead">Union, intersection and difference constructive solid geometry primitives were added to the ray tracer. </p>
@@ -138,7 +133,7 @@
 
       <hr class="featurette-divider">
 
-      <div class="row featurette">
+      <div id="SS" class="row featurette">
         <div class="col-md-7">
           <h2 class="featurette-heading">Soft Shadows </h2>
           <p class="lead">Soft shadows were implemented using my modelling light sources as area lights. Multiple shadow rays were cast to a uniformly distributed 
@@ -152,7 +147,19 @@
       <hr class="featurette-divider">
 
       <!-- /END THE FEATURETTES -->
-
+      
+      <!-- ABOUT/CONTACT -->
+      <div id="about">
+        <!-- <img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="140" height="140"> -->
+        <h2>About</h2>
+        <p>Hello! My name is Sekhar Bhattacharya and I am a Computer Engineering student at the University of Waterloo.
+        This ray tracer was written for a project for the CS488 computer graphics course. This website was
+        built using <a href="http://getbootstrap.com">Bootstrap</a> and the <a hreg="http://getbootstrap.com/examples/carousel/">carousel theme</a>. 
+        The website and the ray tracer code is hosted on <a href="github.com/0ctobyte/raytracer.git">github</a>.</p>
+        <iframe src="https://ghbtns.com/github-btn.html?user=0ctobyte&repo=raytracer&type=star&count=true" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+        <iframe src="https://ghbtns.com/github-btn.html?user=0ctobyte&type=follow&count=true" frameborder="0" scrolling="0" width="220px" height="30px"></iframe>
+      </div>
+      <!-- ABOUT/CONTACT -->
 
       <!-- FOOTER -->
       <footer>
