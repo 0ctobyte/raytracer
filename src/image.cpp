@@ -75,6 +75,11 @@ double& Image::operator()(int x, int y, int i)
   return m_data[m_elements * (m_width * y + x) + i];
 }
 
+bool Image::empty() const
+{
+  return (m_data==NULL);
+}
+
 bool Image::savePng(const std::string& filename)
 {
   FILE* fout = std::fopen(filename.c_str(), "wb");

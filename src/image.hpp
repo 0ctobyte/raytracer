@@ -39,7 +39,9 @@ public:
 
   bool savePng(const std::string& filename); ///< Save this image into
                                              ///  the given PNG file
-  
+
+  bool empty() const; ///< Returns true if the image is empty
+
   const double* data() const;
   double* data();
   

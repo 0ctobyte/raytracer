@@ -23,7 +23,8 @@ void a4_render(// What to render
                unsigned int num_threads,
                unsigned int reflection_level,
                unsigned int aa_samples,
-               unsigned int shadow_samples
+               unsigned int shadow_samples,
+               const std::string& bgfilename
                );
 
 #endif

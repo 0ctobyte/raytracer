@@ -743,10 +743,12 @@ int gr_render_cmd(lua_State* L)
   unsigned int aa_samples = luaL_optnumber(L, 13, 1); 
   unsigned int shadow_samples = luaL_optnumber(L, 14, 0);
 
+  const char* bgfilename = luaL_optstring(L, 15, ""); 
+
   a4_render(root->node, filename, width, height,
             eye, view, up, fov,
             ambient, lights,
-            num_threads, reflection_level, aa_samples, shadow_samples);
+            num_threads, reflection_level, aa_samples, shadow_samples, std::string(bgfilename));
   
   return 0;
 }

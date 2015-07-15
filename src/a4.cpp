@@ -146,7 +146,34 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
   return colour;
 }
 
-void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsigned int width, unsigned int height, std::shared_ptr<SceneNode> root, const Matrix4x4 unproject, const Point3D eye, const Colour ambient, const std::list<std::shared_ptr<Light>> lights, unsigned int reflection_level, unsigned int aa_samples, unsigned int shadow_samples)
+Colour a4_get_background_colour(Image& img, int x, int y, int width, int height)
+{
+  double u = (double)x / (double)width;
+  double v = (double)y / (double)height;
+  
+  double di = u * (double)(img.width()-1);
+  double dj = v * (double)(img.height()-1);
+
+  int i = di;
+  int j = dj;
+
+  // Wrap around if the coordinates are out of bounds
+  int i1 = ((i+1) >= img.width()) ? 0 : i+1;
+  int j1 = ((j+1) >= img.height()) ? 0 : j+1;
+
+  // Get the barycentric coordinates between pixels
+  double up = di - i;
+  double vp = dj - j;
+
+  // Bilinear interpolation between pixel values, basically a weighted average of the sourrounding pixels
+  // using the barycentric coordinates up, vp
+  return (1-up)*(1-vp)*Colour(img(i, j, 0), img(i, j, 1), img(i, j, 2)) +
+    (1-up)*(vp)*Colour(img(i, j1, 0), img(i, j1, 1), img(i, j1, 2)) +
+    (up)*(1-vp)*Colour(img(i1, j, 0), img(i1, j, 1), img(i1, j, 2)) +
+    (up)*(vp)*Colour(img(i1, j1, 0), img(i1, j1, 1), img(i1, j1, 2));
+}
+
+void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsigned int width, unsigned int height, std::shared_ptr<SceneNode> root, const Matrix4x4 unproject, const Point3D eye, const Colour ambient, const std::list<std::shared_ptr<Light>> lights, unsigned int reflection_level, unsigned int aa_samples, unsigned int shadow_samples, Image* bgimg)
 {
   // Seed the rng and set the uniform distribution object
   std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
@@ -161,7 +188,8 @@ void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsig
   for (unsigned int y = ystart; y < height; y += yskip) {
     for (unsigned int x = 0; x < width; x++) {
       // Background colour. a4_trace_ray returns this if no intersections
-      Colour bg = ((x+y) & 0x10) ? (double)y/height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0);
+      Colour bg = bgimg->empty() ? ((x+y) & 0x10) ? (double)y/height * Colour(1.0, 1.0, 1.0) : Colour(0.0, 0.0, 0.0) :
+        a4_get_background_colour(*bgimg, x, y, img->width(), img->height());
 
       // Cast a ray into the scene and get the colour returned
       Colour colour(0.0, 0.0, 0.0);
@@ -221,7 +249,8 @@ void a4_render(// What to render
                unsigned int num_threads,
                unsigned int reflection_level,
                unsigned int aa_samples,
-               unsigned int shadow_samples
+               unsigned int shadow_samples,
+               const std::string& bgfilename
                )
 {
   // Fill in raytracing code here.
@@ -236,7 +265,12 @@ void a4_render(// What to render
     if (I != lights.begin()) std::cerr << ", ";
     std::cerr << *I->get();
   }
-  std::cerr << ", " << num_threads << ", " << reflection_level << ", " << aa_samples << ", " << shadow_samples << "});" << std::endl;
+  std::cerr << ", " << num_threads << ", " << reflection_level << ", " << aa_samples << ", " << shadow_samples;
+  std::cerr << ", " << bgfilename << "});" << std::endl;
+
+  // Open the background image file if one is given
+  Image bg;
+  if(!bgfilename.empty()) bg.loadPng(bgfilename);
 
   // Get pixel unprojection matrix
   double d = view.length();
@@ -254,7 +288,7 @@ void a4_render(// What to render
   std::vector<std::thread> threads(num_threads);
   for(unsigned int i = 0; i < num_threads; i++)
   {
-    threads[i] = std::thread(a4_render_thread, &img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, shadow_samples);
+    threads[i] = std::thread(a4_render_thread, &img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, shadow_samples, &bg);
     if(threads[i].get_id() == std::thread::id())
     {
       std::cerr << "Abort: Failed to create thread " << i << std::endl;
