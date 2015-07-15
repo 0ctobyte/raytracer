@@ -1,7 +1,7 @@
 # Ray Tracer
 
-A ray tracer implemented in C++. It traverses a scene graph described by lua scripts.
-This was written for an assignment for the CS 488 course at the University of Waterloo.
+A ray tracer implemented in C++. It traverses a scene file described by a Lua based DSL.
+This was written for a project for the CS 488 course at the University of Waterloo.
 
 Check out the [site](http://0ctobyte.github.io/raytracer/) to see some of the images rendered with
 the ray tracer!
