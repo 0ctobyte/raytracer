@@ -7,7 +7,7 @@ Check out the [site](http://0ctobyte.github.io/raytracer/) to see some of the im
 the ray tracer!
 
 ## Features
-* Primitives & Soft Shadows
+* Standard Primitives
   - Sphere
   - Cube
   - Polygonal Mesh (faces are assumed to be convex and planar)
