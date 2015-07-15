@@ -51,6 +51,13 @@
                     <li><a href="#PRIM">Primitives</a></li>
                     <li><a href="#CSG">Constructive Solid Geometry</a></li>
                     <li><a href="#SS">Soft Shadows</a></li>
+                    <li><a href="#AA">Anti-Aliasing</a></li>
+                    <li><a href="#TEX">Texture Mapping</a></li>
+                    <li><a href="#BMP">Bump Mapping</a></li>
+                    <li><a href="#REFRACT">Refraction</a></li>
+                    <li><a href="#PHONG">Phong Shading</a></li>
+                    <li><a href="#PERLIN">Perlin Noise</a></li>
+                    <li><a href="#GLOSSY">Glossy Reflection</a></li>
                   </ul>
                 </li>
               </ul>
@@ -69,11 +76,10 @@
       <ol class="carousel-indicators">
         <li data-target="#myCarousel" data-slide-to="0" class="active"></li>
         <li data-target="#myCarousel" data-slide-to="1"></li>
-        <li data-target="#myCarousel" data-slide-to="2"></li>
       </ol>
       <div class="carousel-inner" role="listbox">
         <div class="item active">
-          <img class="first-slide" src="images/prim.ss.512.png" alt="First slide">
+          <div class="carousel-image" style="background-image:url('images/texture.2048.512.png');"></div>
           <div class="container">
             <div class="carousel-caption">
               <h1>Ray Tracer </h1>
@@ -82,10 +88,7 @@
           </div>
         </div>
         <div class="item">
-          <img class="second-slide" src="images/csg.512.png" alt="Second slide">
-        </div>
-        <div class="item">
-          <img class="third-slide" src="images/prim.512.png" alt="Third slide">
+          <div class="carousel-image" style="background-image:url('images/csg.2048.512.png');"></div>
         </div>
       </div>
       <a class="left carousel-control" href="#myCarousel" role="button" data-slide="prev">
@@ -123,11 +126,11 @@
 
       <div id="CSG" class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Constructive Solid Geometry <!-- <span class="text-muted">See for yourself.</span> --></h2>
+          <h2 class="featurette-heading">Constructive Solid Geometry </h2>
           <p class="lead">Union, intersection and difference constructive solid geometry primitives were added to the ray tracer. </p>
         </div>
         <div class="col-md-5 col-md-pull-7">
-          <img class="featurette-image img-responsive center-block" src="images/csg.512.png" alt="CSG">
+          <img class="featurette-image img-responsive center-block" src="images/csg.512.png" alt="Constructive solid geometry">
         </div>
       </div>
 
@@ -140,7 +143,131 @@
           random point on the area light and the results were averaged to produce the soft shadows.</p>
         </div>
         <div class="col-md-5">
-          <img class="featurette-image img-responsive center-block" src="images/prim.ss.512.png" alt="Soft shadows">
+          <div class="featurette-image img-responsive center-block">
+            <div id="ssCarousel" class="carousel slide" data-ride="carousel">
+              <!-- Indicators -->
+              <ol class="carousel-indicators">
+                <li data-target="#ssCarousel" data-slide-to="0" class="active"></li>
+                <li data-target="#ssCarousel" data-slide-to="1"></li>
+              </ol>
+              <div class="carousel-inner" role="listbox">
+                <div class="item active">
+                  <div class="carousel-image" style="background-image:url('images/prim.512.png');"></div>
+                  <div class="container">
+                    <div class="carousel-caption">
+                      <p>No soft shadows</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="item">
+                  <div class="carousel-image" style="background-image:url('images/prim.ss.512.png');"></div>
+                  <div class="container">
+                    <div class="carousel-caption">
+                      <p>With soft shadows</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <a class="left carousel-control" href="#ssCarousel" role="button" data-slide="prev">
+                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+                <span class="sr-only">Previous</span>
+              </a>
+              <a class="right carousel-control" href="#ssCarousel" role="button" data-slide="next">
+                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+                <span class="sr-only">Next</span>
+              </a>
+            </div><!-- /.carousel -->
+          </div>
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="AA" class="row featurette">
+        <div class="col-md-7 col-md-push-5">
+          <h2 class="featurette-heading">Anti-Aliasing </h2>
+          <p class="lead">Anti-aliasing is implemented by randomly casting multiple rays for each pixels and averaging the colours sampled by each ray.</p>
+        </div>
+        <div class="col-md-5 col-md-pull-7">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Anti-aliasing">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="TEX" class="row featurette">
+        <div class="col-md-7">
+          <h2 class="featurette-heading">Texture Mapping </h2>
+          <p class="lead">Texture mapping was implemented by generating barycentric coordinates for each primitive which were then used to index into the texture
+          image to retrieve a texture sample. The sampling was done using bilinear interpolation in order to retrieve colours where the texture coordinates were between pixels.</p>
+        </div>
+        <div class="col-md-5">
+          <img class="featurette-image img-responsive center-block" src="images/texture.512.png" alt="Texture mapping">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="BMP" class="row featurette">
+        <div class="col-md-7 col-md-push-5">
+          <h2 class="featurette-heading">Bump Mapping </h2>
+          <p class="lead">Bump mapping is implemented in a similar way as texture mapping where a image file is indexed and a displacement value is retrieved which is used
+          to displace the surface normal.</p>
+        </div>
+        <div class="col-md-5 col-md-pull-7">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Bump mapping">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="REFRACT" class="row featurette">
+        <div class="col-md-7">
+          <h2 class="featurette-heading">Refraction </h2>
+          <p class="lead">Refraction is implemented by casting secondary refracted rays calculated using Snell's law and an index of refraction for the given material.
+          Fresnel's equations are used to balance the amount of light reflected and refracted by a material.</p>
+        </div>
+        <div class="col-md-5">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Refraction">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="PHONG" class="row featurette">
+        <div class="col-md-7 col-md-push-5">
+          <h2 class="featurette-heading">Phong Shading <span class="text-muted">(Normal Interpolation)</span></h2>
+          <p class="lead">By calculating the barycentric coordinates of the intersection point with a triangle, the weighted average of the surrounding vertex normals
+          is used in the lighting calculations to produce smooth surfaces for a mesh with triangular faces.</p>
+        </div>
+        <div class="col-md-5 col-md-pull-7">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Phong shading">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="PERLIN" class="row featurette">
+        <div class="col-md-7">
+          <h2 class="featurette-heading">Perlin Noise </h2>
+          <p class="lead">A noise function is used to produce a colour sample for a given coordinate on the primitive instead of indexing a texture image. This produces images
+          of primitives with natural looking textures.</p>
+        </div>
+        <div class="col-md-5">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Perlin noise">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="GLOSSY" class="row featurette">
+        <div class="col-md-7 col-md-push-5">
+          <h2 class="featurette-heading">Glossy Reflection </h2>
+          <p class="lead">Multiple reflection rays are cast with each being randomly perturbed using a uniform distribution. The average of the colours sampled by each ray produces materials
+          that generate glossy reflection.</p>
+        </div>
+        <div class="col-md-5 col-md-pull-7">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Glossy reflection">
         </div>
       </div>
 
