@@ -68,6 +68,20 @@
       </div>
     </div>
 
+    <!-- MODAL DIALOG -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              </br>
+            </div>
+            <div class="modal-body">
+              <img id="mimg" class="img-responsive center-block" src="">
+            </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
     <!-- Carousel
     ================================================== -->
@@ -108,13 +122,20 @@
 
     <div class="container marketing">
 
+      <!-- OBJECTIVE DESCRIPTION -->
+      <div id="objectives">
+        <h2 class="featurette-heading">Objectives</h2>
+        <p class="lead">The following are the features/objectives implemented in the ray tracer for the final project.</p>
+      </div>
+      <!-- OBJECTIVE DESCRIPTION -->
+
       <!-- START THE FEATURETTES -->
 
       <hr class="featurette-divider">
 
       <div id="PRIM" class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">Primitives </h2>
+          <h3 class="featurette-heading">Primitives </h3>
           <p class="lead">Implemented extra primitives such as cones, cylinders, discs and torus'.</p>
         </div>
         <div class="col-md-5">
@@ -126,7 +147,7 @@
 
       <div id="CSG" class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Constructive Solid Geometry </h2>
+          <h3 class="featurette-heading">Constructive Solid Geometry </h3>
           <p class="lead">Union, intersection and difference constructive solid geometry primitives were added to the ray tracer. </p>
         </div>
         <div class="col-md-5 col-md-pull-7">
@@ -138,7 +159,7 @@
 
       <div id="SS" class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">Soft Shadows </h2>
+          <h3 class="featurette-heading">Soft Shadows </h3>
           <p class="lead">Soft shadows were implemented by modelling light sources as area lights. Multiple shadow rays were cast to a uniformly distributed 
           random point on the area light and the results were averaged to produce the soft shadows.</p>
         </div>
@@ -183,7 +204,7 @@
       
       <div id="AA" class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Anti-Aliasing </h2>
+          <h3 class="featurette-heading">Anti-Aliasing </h3>
           <p class="lead">Anti-aliasing is implemented by randomly casting multiple rays for each pixels and averaging the colours sampled by each ray.</p>
         </div>
         <div class="col-md-5 col-md-pull-7">
@@ -195,7 +216,7 @@
       
       <div id="TEX" class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">Texture Mapping </h2>
+          <h3 class="featurette-heading">Texture Mapping </h3>
           <p class="lead">Texture mapping was implemented by generating barycentric coordinates for each primitive which were then used to index into the texture
           image to retrieve a texture sample. The sampling was done using bilinear interpolation in order to retrieve colours where the texture coordinates were between pixels.</p>
         </div>
@@ -208,7 +229,7 @@
       
       <div id="BMP" class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Bump Mapping </h2>
+          <h3 class="featurette-heading">Bump Mapping </h3>
           <p class="lead">Bump mapping is implemented in a similar way as texture mapping where a image file is indexed and a displacement value is retrieved which is used
           to displace the surface normal.</p>
         </div>
@@ -221,7 +242,7 @@
       
       <div id="REFRACT" class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">Refraction </h2>
+          <h3 class="featurette-heading">Refraction </h3>
           <p class="lead">Refraction is implemented by casting secondary refracted rays calculated using Snell's law and an index of refraction for the given material.
           Fresnel's equations are used to balance the amount of light reflected and refracted by a material.</p>
         </div>
@@ -234,7 +255,7 @@
       
       <div id="PHONG" class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Phong Shading <span class="text-muted">(Normal Interpolation)</span></h2>
+          <h3 class="featurette-heading">Phong Shading <span class="text-muted">(Normal Interpolation)</span></h3>
           <p class="lead">By calculating the barycentric coordinates of the intersection point with a triangle, the weighted average of the surrounding vertex normals
           is used in the lighting calculations to produce smooth surfaces for a mesh with triangular faces.</p>
         </div>
@@ -247,7 +268,7 @@
       
       <div id="PERLIN" class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">Perlin Noise </h2>
+          <h3 class="featurette-heading">Perlin Noise </h3>
           <p class="lead">A noise function is used to produce a colour sample for a given coordinate on the primitive instead of indexing a texture image. This produces images
           of primitives with natural looking textures.</p>
         </div>
@@ -260,7 +281,7 @@
       
       <div id="GLOSSY" class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Glossy Reflection </h2>
+          <h3 class="featurette-heading">Glossy Reflection </h3>
           <p class="lead">Multiple reflection rays are cast with each being randomly perturbed using a uniform distribution. The average of the colours sampled by each ray produces materials
           that generate glossy reflection.</p>
         </div>
@@ -275,7 +296,6 @@
       
       <!-- ABOUT/CONTACT -->
       <div id="about">
-        <!-- <img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="140" height="140"> -->
         <h2>About</h2>
         <p>Hello! My name is Sekhar Bhattacharya and I am a Computer Engineering student at the University of Waterloo.
         This ray tracer was written for a project for the CS488 computer graphics course. This website was
@@ -302,6 +322,7 @@
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
     <script src="js/ie10-viewport-bug-workaround.js"></script>
+    <script src="js/modal.js"></script>
   </body>
 </html>
 
