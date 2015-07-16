@@ -489,6 +489,11 @@ bool NonhierPlane::intersect(const Ray& ray, Intersection& j) const
   j.u = 0.5 + P[0] / m_size;
   j.v = 0.5 + P[2] / m_size;
 
+  if(j.n[2] <= j.n[0] && j.n[2] <= j.n[1]) j.pu = Vector3D(-j.n[1], j.n[0], 0.0);
+  else if(j.n[1] <= j.n[0]) j.pu = Vector3D(-j.n[2], 0, j.n[0]);
+  else j.pu = Vector3D(0, -j.n[2], j.n[1]); 
+  j.pv = j.n.cross(j.pu);
+
   return true;
 }
 
