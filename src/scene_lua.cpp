@@ -873,7 +873,7 @@ int gr_node_set_bumpmap_cmd(lua_State* L)
   luaL_argcheck(L, texture.loadPng(filename), 2, "Failed to load png file");
 
   std::shared_ptr<PhongMaterial> new_material = std::make_shared<PhongMaterial>(material);
-  new_material->set_texture(texture);
+  new_material->set_bumpmap(texture);
 
   self->set_material(new_material);
 

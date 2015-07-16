@@ -605,6 +605,7 @@ public:
     , isLight(false)
     , lightColour(0.0, 0.0, 0.0)
     , u(0.0), v(0.0)
+    , pu(0.0, 0.0, 0.0), pv(0.0, 0.0, 0.0)
     //, t(std::numeric_limits<double>::infinity())
   {}
   Intersection(const Intersection& other)
@@ -614,6 +615,7 @@ public:
     , isLight(other.isLight)
     , lightColour(other.lightColour)
     , u(other.u), v(other.v)
+    , pu(other.pu), pv(other.pv)
     //, t(other.t)
   {}
 
@@ -623,6 +625,7 @@ public:
   bool isLight; // True if intersection with a light object
   Colour lightColour; // If intersect with light, then this is the colour of the light
   double u, v; // Parametric coordinates
+  Vector3D pu, pv; // Tangent vectors which form a orthogonal basis with the normal
   //double t; // Distance from ray's origin along ray's direction vector to intersection point: t*ray.direction + ray.origin
 };
 

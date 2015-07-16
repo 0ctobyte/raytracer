@@ -47,7 +47,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const std::shared_ptr<
 {
   std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
   Point3D surface_point = i.q;
-  Vector3D normal = material->bump(i.n.normalized());
+  Vector3D normal = material->bump(i.n, i.pu, i.pv, i.u, i.v);
   Colour material_diffuse = material->diffuse(i.u, i.v);
   Colour light_colour = light->getColour();
     

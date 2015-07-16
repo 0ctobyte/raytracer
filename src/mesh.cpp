@@ -62,7 +62,7 @@ bool Mesh::intersect(const Ray& ray, Intersection& j) const
       Point3D P1 = m_verts[face[1]];
       Point3D P2 = m_verts[face[2]];
 
-      Vector3D n = (P1-P0).cross(P2-P0).normalized();
+      Vector3D n = (P1-P0).cross(P2-P0);
 
       // Now check if the ray intersects the polygon containing the face
       // If denom is 0 then the ray does not intersect the plane at all

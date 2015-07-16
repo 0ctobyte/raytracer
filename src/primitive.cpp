@@ -122,9 +122,30 @@ bool NonhierSphere::intersect(const Ray& ray, Intersection& j) const
     double t = (num_roots == 1) ? roots[0] : ((min < 0) ? std::max<double>(roots[0], roots[1]) : min);
     if(t < 0) return false;
     j.q = ray.origin() + t*ray.direction();
-    j.n = (j.q - m_pos).normalized();
-    j.u = (atan2(-j.n[2], j.n[0]) + M_PI) / (2 * M_PI);
-    j.v = acos(-j.n[1] / m_radius) / M_PI;
+    j.n = (j.q - m_pos);
+
+    // To calculate the parametric coordinates of the point on the sphere we need to define 3 bivariate functions.
+    // For a sphere the spherical coordinate system can be used to define the X, Y, Z coordinates like so:
+    // X = r*cos(THETA)*sin(PHI)
+    // Y = -r*cos(PHI)
+    // Z = -r*sin(THETA)*sin(PHI)
+    // Where THETA = atan2(-(z - center.z), x - center.x) and PHI = acos(-(y - center.y) / r)
+    // And the parameters u = (THETA + PI) / (2*PI) and v = PHI / PI; u,v E [0, 1]
+    double theta = atan2(-j.n[2], j.n[0]);
+    double phi = acos(-j.n[1] / m_radius);
+
+    j.u = (theta + M_PI) / (2 * M_PI);
+    j.v = phi / M_PI;
+
+    j.pu = Vector3D(-m_radius*sin(theta)*sin(phi), 0, -m_radius*cos(theta)*sin(phi));
+    j.pv = Vector3D(m_radius*cos(theta)*cos(phi), m_radius*sin(phi), -m_radius*sin(theta)*cos(phi));
+
+    //Vector3D pu1, pv1;
+    //if(j.n[2] <= j.n[0] && j.n[2] <= j.n[1]) pu1 = Vector3D(-j.n[1], j.n[2], 0.0);
+    //else if(j.n[1] <= j.n[0]) pu1 = Vector3D(-j.n[2], 0.0, j.n[0]);
+    //else pu1 = Vector3D(0.0, -j.n[2], j.n[1]);
+    //pv1 = j.n.cross(pu1);
+
     return true;
   }
   
@@ -182,7 +203,7 @@ bool NonhierCone::intersect(const Ray& ray, Intersection& j) const
         Point3D Q = ray.origin() + t*ray.direction();
         Vector3D N(2*Q[0], 2*Q[1], -2*Q[2]);
         
-        double U = acos(Vector3D(Q[0]-m_pos[0], Q[1]-m_pos[1], 0.0).normalized().dot(Vector3D(1.0, 0.0, 0.0))) / M_PI;
+        double U = acos(Vector3D(Q[0]-m_pos[0], Q[1]-m_pos[1], 0.0).dot(Vector3D(1.0, 0.0, 0.0))) / M_PI;
         double V = (Q[2]-m_pos[2]) / zmin;
      
         int signz1 = ((z1-zmin) > 0) ? 1 : 0;
@@ -196,7 +217,7 @@ bool NonhierCone::intersect(const Ray& ray, Intersection& j) const
 
         // To find the normal we just take the gradient and plug the coordinate values for the intersection point into the gradient result
         j.q = Q;
-        j.n = N.normalized();
+        j.n = N;
         j.u = U;
         j.v = V;
 
@@ -267,7 +288,7 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
         // corresponding to the axis which the cylinder is aligned (the Z axis in this case)
         // While we are at it, lets just calculate the U, V texture coordinates
         N = (ray.origin() + t*ray.direction())-m_pos;
-        U = acos(Vector3D(N[0], N[1], 0.0).normalized().dot(Vector3D(1.0, 0.0, 0.0))) / M_PI;
+        U = acos(Vector3D(N[0], N[1], 0.0).dot(Vector3D(1.0, 0.0, 0.0))) / M_PI;
         V = N[2] / m_height + 0.5;
         N[2] = 0.0;
 
@@ -315,7 +336,7 @@ bool NonhierCylinder::intersect(const Ray& ray, Intersection& j) const
   if(intersected)
   {
     j.q = ray.origin() + t*ray.direction();
-    j.n = N.normalized();
+    j.n = N;
     j.u = U;
     j.v = V;
   }
@@ -522,7 +543,7 @@ bool NonhierTorus::intersect(const Ray& ray, Intersection& j) const
   double nz = 4*Q[2]*(qz2 + qy2 + qz2 - r2 - R2) + 8*R2*Q[2];
   
   j.q = Q;
-  j.n = Vector3D(nx, ny, nz).normalized();
+  j.n = Vector3D(nx, ny, nz);
 
   double theta = asin((Q[2]-m_pos[2]) / m_iradius);
   double phi = asin((Q[1]-m_pos[1]) / (m_oradius + m_iradius*cos(theta)));

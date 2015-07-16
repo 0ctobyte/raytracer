@@ -48,7 +48,7 @@ public:
   }
 
   virtual Colour diffuse(double u, double v) const;
-  virtual Vector3D bump(const Vector3D& normal) const; 
+  virtual Vector3D bump(const Vector3D& normal, const Vector3D& pu, const Vector3D& pv, double u, double v) const; 
 
 protected:
   Colour m_kd;
