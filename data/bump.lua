@@ -26,7 +26,7 @@ light1 = gr.light({5, 5, -5}, light_color, {1, 0, 0})
 light1 = gr.light({7, 4, -15}, light_color_3, {1, 0, 0})
 
 gr.render(scene,
-	  'bumpmap.png', 512, 512,
+	  'bump.png', 512, 512,
 	  {0, 0, -15}, {0, 0, 1}, {0, 1, 0}, 50,
 	  {0.3,0.3,0.3}, {light1},
     4, 4, 2, 1, 'backgrounds/sky.png')
