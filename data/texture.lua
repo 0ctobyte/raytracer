@@ -22,11 +22,12 @@ light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 light_color = {1.0, 1.0, 1.0}
 
 -- on ceiling
-light1 = gr.light({50, 0, 15}, light_color, {1, 0, 0})
+light1 = gr.light({10, 10, 0}, light_color, {1, 0, 0})
+light2 = gr.light({10, 10, 0}, light_color, {1, 0, 0})
 
 gr.render(scene,
 	  'texture.png', 512, 512,
 	  {0, 0, -1}, {0, 0, 1}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1, light2},
+	  {0.1,0.1,0.1}, {light1, light2},
     4, 4, 2, 1, 'backgrounds/starry.sky.png')
 
