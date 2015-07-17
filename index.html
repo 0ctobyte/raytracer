@@ -48,8 +48,8 @@
                   <ul class="dropdown-menu">
                     <li><a href="#PRIM">Primitives</a></li>
                     <li><a href="#CSG">Constructive Solid Geometry</a></li>
-                    <li><a href="#SS">Soft Shadows</a></li>
                     <li><a href="#AA">Anti-Aliasing</a></li>
+                    <li><a href="#SS">Soft Shadows</a></li>
                     <li><a href="#TEX">Texture Mapping</a></li>
                     <li><a href="#BMP">Bump Mapping</a></li>
                     <li><a href="#REFRACT">Refraction</a></li>
@@ -156,13 +156,25 @@
 
       <hr class="featurette-divider">
 
-      <div id="SS" class="row featurette">
+      <div id="AA" class="row featurette">
         <div class="col-md-7">
+          <h3 class="featurette-heading">Anti-Aliasing </h3>
+          <p class="lead">Anti-aliasing is implemented by randomly casting multiple rays for each pixels and averaging the colours sampled by each ray.</p>
+        </div>
+        <div class="col-md-5">
+          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Anti-aliasing">
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+      
+      <div id="SS" class="row featurette">
+        <div class="col-md-7 col-md-push-5">
           <h3 class="featurette-heading">Soft Shadows </h3>
           <p class="lead">Soft shadows were implemented by modelling light sources as area lights. Multiple shadow rays were cast to a uniformly distributed 
           random point on the area light and the results were averaged to produce the soft shadows.</p>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-5 col-md-pull-7 ">
           <div id="ssCarousel" class="carousel slide featurette-image" data-ride="carousel">
             <!-- Indicators -->
             <ol class="carousel-indicators">
@@ -201,18 +213,7 @@
 
       <hr class="featurette-divider">
       
-      <div id="AA" class="row featurette">
-        <div class="col-md-7 col-md-push-5">
-          <h3 class="featurette-heading">Anti-Aliasing </h3>
-          <p class="lead">Anti-aliasing is implemented by randomly casting multiple rays for each pixels and averaging the colours sampled by each ray.</p>
-        </div>
-        <div class="col-md-5 col-md-pull-7">
-          <img class="featurette-image img-responsive center-block" src="images/grey.512.png" alt="Anti-aliasing">
-        </div>
-      </div>
 
-      <hr class="featurette-divider">
-      
       <div id="TEX" class="row featurette">
         <div class="col-md-7">
           <h3 class="featurette-heading">Texture Mapping </h3>
