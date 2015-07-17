@@ -92,7 +92,7 @@ Vector3D PhongMaterial::bump(const Vector3D& n, const Vector3D& pu, const Vector
   double fu = (bumpmap(u+e, v) - bumpmap(u-e, v)) / (2*e);
   double fv = (bumpmap(u, v+e) - bumpmap(u, v-e)) / (2*e);
 
-  Vector3D D = (1.0 / n.length()) * (fu * (n.cross(pv)) - fv * (n.cross(pu)));
+  Vector3D D = 0.05 * (fu * (n.cross(pv)) - fv * (n.cross(pu)));
 
   return (n + D).normalized();
 }
