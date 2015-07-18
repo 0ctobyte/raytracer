@@ -26,7 +26,7 @@ backwall = gr.plane('backwall')
 scene:add_child(backwall)
 backwall:set_material(white_cornell)
 backwall:translate(0, 0, 2)
-backwall:rotate('x', -90)
+backwall:rotate('x', -70)
 backwall:scale(length, 1.0, length)
 
 -- lights
