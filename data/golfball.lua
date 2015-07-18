@@ -12,7 +12,7 @@ height = 3.0
 sphere = gr.sphere('s')
 scene:add_child(sphere)
 sphere:set_material(white)
-sphere:set_bumpmap('bumps/golfball_bump.png')
+sphere:set_bumpmap('bumps/golfball-bump.png')
 sphere:translate(0, -radius, 0)
 sphere:scale(radius, radius, radius)
 
