@@ -35,11 +35,13 @@ light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 light_color = {1.0, 1.0, 1.0}
 
 -- on ceiling
-light1 = gr.disc_light({10, 10, 0}, light_color, {1, 0, 0}, {0, -1, 0}, 2)
+light1 = gr.disc_light({10, 10, 0}, light_color, {1, 0, 0}, {-9.5, -11, -1}, 5)
 
+aa = 4
+ss = 1
 gr.render(scene,
-	  'torus.2.256.png', 512, 512,
+	  'torus.' .. tostring(aa) .. '.' .. tostring(ss) .. '.png', 512, 512,
 	  {0, 2, -5}, {0, -3.011505, 5.56155}, {0, 1, 0}, 50,
 	  {0.1,0.1,0.1}, {light1},
-    4, 4, 2, 256)
+    4, 4, aa, ss)
 
