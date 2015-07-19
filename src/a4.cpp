@@ -178,7 +178,7 @@ void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsig
   // Seed the rng and set the uniform distribution object
   std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
   std::uniform_real_distribution<double> uniform_distribution(0, 1);
-  std::function<double()> uniform = std::bind(uniform_distribution, gen);
+  std::function<double()> uniform = std::bind(uniform_distribution, std::ref(gen));
 
   int one_percent = width * height * 0.01;
   int pixel_count = 0;
