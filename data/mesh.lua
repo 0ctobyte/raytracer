@@ -2,82 +2,52 @@
 -- materials
 require('materials')
 
--- read obj files
+-- need this to read obj files
 require('readobj')
 
 -- Scene root
 scene = gr.node('scene')
 
-radius = 2.0
+radius = 0.7
+length = 10
 
-suzanne = gr.mesh('suzanne', readobj("objs/suzanne_n.obj"))
-scene:add_child(suzanne)
-suzanne:set_material(white_cornell)
-suzanne:translate(0, radius, 0)
-suzanne:rotate('y', 180)
-suzanne:scale(radius, radius, radius)
+--teapot = gr.mesh('teapot', readobj('objs/teapot_n.obj'))
+--scene:add_child(teapot)
+--teapot:set_material(white_cornell)
 
--- Room
-room_width = 10.0
-room_height = 10.0
-room_length = 30.0
-room = gr.node('room')
-scene:add_child(room)
+--torus = gr.torus('torus')
+--scene:add_child(torus)
+--torus:set_material(red_cornell)
+--torus:scale(radius, radius, radius)
+--torus:rotate('y', -20) 
+--torus:rotate('x', 70)
+--torus:translate(0.5, -1, -1)
 
--- floor
 floor = gr.plane('floor')
-room:add_child(floor)
-floor:set_material(white_cornell_shiny)
-floor:translate(0.0, -1.0, 0.0)
-floor:scale(room_width, 1, room_length)
+scene:add_child(floor)
+floor:set_material(white_cornell)
+floor:set_texture('textures/boards02.png')
+floor:set_bumpmap('bumps/boards02-bump.png', 0.005)
+floor:scale(length, 1.0, length)
 
--- ceiling
-ceiling = gr.plane('ceiling')
-room:add_child(ceiling)
-ceiling:set_material(white_cornell)
-ceiling:translate(0.0, room_height-2.0, 0.0)
-ceiling:rotate('z', 180.0)
-ceiling:scale(room_width, 1, room_length)
-
--- left wall
-left_wall = gr.plane('left_wall')
-room:add_child(left_wall)
-left_wall:set_material(green_cornell)
-left_wall:translate(room_width/2.0-1, room_height/2.0-1, 0.0)
-left_wall:rotate('z', 90)
-left_wall:scale(room_height, 1.0, room_length)
-
--- right wall
-right_wall = gr.plane('right_wall')
-room:add_child(right_wall)
-right_wall:set_material(red_cornell)
-right_wall:translate(-room_width/2.0+1, room_height/2.0-1.0, 0.0)
-right_wall:rotate('z', -90)
-right_wall:scale(room_height, 1.0, room_length)
-
--- back wall
-back_wall = gr.plane('back_wall')
-room:add_child(back_wall)
-back_wall:set_material(white_cornell)
-back_wall:translate(0.0, room_height/2.0-1.0, room_length/6)
-back_wall:rotate('x', -90.0)
-back_wall:scale(room_width, 1.0, room_height)
+backwall = gr.plane('backwall')
+scene:add_child(backwall)
+backwall:set_material(white_cornell)
+backwall:translate(0, 0, 2)
+backwall:rotate('x', -70)
+backwall:scale(length, 1.0, length)
 
 -- lights
 light_color = {0.780131, 0.780409, 0.775833}
 light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
+light_color = {1.0, 1.0, 1.0}
 
 -- on ceiling
-light1 = gr.light({0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
-
--- by camera
-light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
-
---sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
+light1 = gr.disc_light({10, 10, 0}, light_color, {1, 0, 0}, {0, -1, 0}, 2)
 
 gr.render(scene,
 	  'mesh.png', 512, 512,
-	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1, light2},
+	  {0, 4, -4.5}, {0, -7.871199, 4.612095}, {0, 1, 0}, 50,
+	  {0.1,0.1,0.1}, {light1},
     4, 4, 2, 1)
 

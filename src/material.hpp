@@ -18,8 +18,6 @@ protected:
 class PhongMaterial : public Material {
 public:
   PhongMaterial(const Colour& kd, const Colour& ks, double shininess);
-  PhongMaterial(const Colour& kd, const Colour& ks, double shininess, const Image& texture);
-  PhongMaterial(const Colour& kd, const Colour& ks, double shininess, const Image& texture, const Image& bumpmap);
   PhongMaterial(std::shared_ptr<const PhongMaterial> material);
   virtual ~PhongMaterial();
   
@@ -41,9 +39,10 @@ public:
     m_texture = texture;
     m_has_texture = true;
   }
-  void set_bumpmap(const Image& bumpmap)
+  void set_bumpmap(const Image& bumpmap, double bumpscale)
   {
     m_bumpmap = bumpmap;
+    m_bumpscale = bumpscale;
     m_has_bumpmap = true;
   }
 
@@ -60,6 +59,7 @@ protected:
   Image m_bumpmap;
   bool m_has_texture;
   bool m_has_bumpmap;
+  double m_bumpscale; // So bump mapping doesn't look right unless we scale it down. I must be doing something wrong...
 };
 
 #endif
