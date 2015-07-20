@@ -831,8 +831,9 @@ int gr_material_cmd(lua_State* L)
   get_tuple(L, 2, ks, 3);
 
   double shininess = luaL_checknumber(L, 3);
+  double ni = luaL_optnumber(L, 4, 0);
   
-  data->material = std::make_shared<PhongMaterial>(Colour(kd[0], kd[1], kd[2]), Colour(ks[0], ks[1], ks[2]), shininess);
+  data->material = std::make_shared<PhongMaterial>(Colour(kd[0], kd[1], kd[2]), Colour(ks[0], ks[1], ks[2]), shininess, ni);
 
   luaL_newmetatable(L, "gr.material");
   lua_setmetatable(L, -2);
