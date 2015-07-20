@@ -1,6 +1,8 @@
 -- materials
 require('materials')
 
+glass = gr.material({0, 0, 0}, {1, 1, 1}, 50000000, 1.52)
+
 -- Scene root
 scene = gr.node('scene')
 
@@ -9,7 +11,7 @@ height = 3.0
 
 sphere = gr.sphere('sphere')
 scene:add_child(sphere)
-sphere:set_material(white_cornell_shiny)
+sphere:set_material(glass)
 sphere:translate(0, radius-1, 0)
 sphere:scale(radius, radius, radius)
 

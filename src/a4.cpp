@@ -9,6 +9,7 @@
 #include <random>
 #include <functional>
 #include <thread>
+#include <utility>
 
 unsigned int progress = 0;
 std::mutex progress_mut;
@@ -146,10 +147,9 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     Colour refracted_colour(0.0, 0.0, 0.0);
     if(material->ni() > 0 && recurse_level > 0)
     {
-
     }
 
-    // Add the reflection. A coefficient is multiplied with the colour to damp the saturation due to multiple light sources
+    // Add the reflection
     colour = colour + (R * reflected_colour * specular) + ((1- R) * refracted_colour * _specular);
   }
 
