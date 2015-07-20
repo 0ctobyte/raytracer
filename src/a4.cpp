@@ -112,6 +112,7 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     // Add the ambient colour to the object
     std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
     Colour diffuse = material->diffuse(i.u, i.v);
+    Colour specular = material->specular();
     colour = ambient * diffuse;
 
     if(diffuse != Colour(0.0, 0.0, 0.0))
@@ -139,8 +140,17 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
       reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, uniform, --recurse_level, shadow_samples);
     }
 
+    // Cast refracted rays and add the colour returned
+    double R = 1.0;
+    Colour _specular(1.0-specular.R(), 1.0-specular.G(), 1.0-specular.B());
+    Colour refracted_colour(0.0, 0.0, 0.0);
+    if(material->ni() > 0 && recurse_level > 0)
+    {
+
+    }
+
     // Add the reflection. A coefficient is multiplied with the colour to damp the saturation due to multiple light sources
-    colour = colour + (reflected_colour * material->specular());
+    colour = colour + (R * reflected_colour * specular) + ((1- R) * refracted_colour * _specular);
   }
 
   return colour;

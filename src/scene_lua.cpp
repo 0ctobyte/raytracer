@@ -820,7 +820,10 @@ extern "C"
 int gr_material_cmd(lua_State* L)
 {
   GRLUA_DEBUG_CALL;
-  
+ 
+  // This needs to be done before newuserdata pushes the userdata on to the stack
+  double ni = luaL_optnumber(L, 4, 0);
+
   gr_material_ud* data = (gr_material_ud*)lua_newuserdata(L, sizeof(gr_material_ud));
   std::shared_ptr<Material> temp;
   memcpy(&data->material, &temp, sizeof(std::shared_ptr<Material>)); 
@@ -831,7 +834,6 @@ int gr_material_cmd(lua_State* L)
   get_tuple(L, 2, ks, 3);
 
   double shininess = luaL_checknumber(L, 3);
-  double ni = luaL_optnumber(L, 4, 0);
   
   data->material = std::make_shared<PhongMaterial>(Colour(kd[0], kd[1], kd[2]), Colour(ks[0], ks[1], ks[2]), shininess, ni);
 
