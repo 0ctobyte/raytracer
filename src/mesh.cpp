@@ -233,7 +233,7 @@ bool TriMesh::intersect(const Ray& ray, Intersection& intersection) const
   if(!m_boundingBall.intersect(ray, k)) return false;
 
   // Test intersection with each triangle
-  bool intersected = true;
+  bool intersected = false;
   double prev_t = std::numeric_limits<double>::infinity();
   for(auto face : m_tfaces)
   {
@@ -241,42 +241,37 @@ bool TriMesh::intersect(const Ray& ray, Intersection& intersection) const
     Point3D B = m_verts[std::get<0>(face[1])];
     Point3D C = m_verts[std::get<0>(face[2])];
 
-    // Compute the intersection using Cramer's rule
+    // Compute the intersection using Moller & Trumbore's algorithm and Cramer's rule
     // The following variables are the expanded terms from the matrix form of the system
-    double a = A[0] - B[0];
-    double b = A[1] - B[1];
-    double c = A[2] - B[2];
-    double d = A[0] - C[0];
-    double e = A[1] - C[1];
-    double f = A[2] - C[2];
-    double g = ray.direction()[0];
-    double h = ray.direction()[1];
-    double i = ray.direction()[2];
-    double j = A[0] - ray.origin()[0];
-    double k = A[1] - ray.origin()[1];
-    double l = A[2] - ray.origin()[2];
+    Vector3D E1 = B - A;
+    Vector3D E2 = C - A;
+    Vector3D D = ray.direction();
 
-    double ei_hf = e*i - h*f;
-    double gf_di = g*f - d*i;
-    double dh_eg = d*h - e*g;
-    double ak_jb = a*k - j*b;
-    double jc_al = j*c - a*l;
-    double bl_kc = b*l - k*c;
+    Vector3D P = D.cross(E2);
 
-    double M = a*ei_hf + b*gf_di + c*dh_eg;
-
-    // Calculate t and make sure it is positive otherwise it is behind the ray's origin
-    // Also make sure that is the closest intersection thus far
-    double t = (f*ak_jb + e*jc_al + d*bl_kc) / M;
-    if(t < 0 || t > prev_t) continue;
+    // If determinant is zero then the ray is parallel to the triangle
+    double det = P.dot(E1);
+    if(fabs(det) < std::numeric_limits<double>::epsilon()) continue;
 
     // Calculate u, barycentric coordinate, and make sure it is within range of [0, 1]
-    double u = (j*ei_hf + k*gf_di + l*dh_eg) / M;
-    if(u < 0 || u > 1) continue;
+    Vector3D T = ray.origin() - A;
+    double u = P.dot(T);
+    if(u < 0 || u > det) continue;
 
     // Calculate v, barycentric coordinate, and make sure it is within range. u + v must be less than 1!
-    double v = (i*ak_jb + h*jc_al + g*bl_kc) / M;
-    if(v < 0 || v > (1 - u)) continue;
+    Vector3D Q = T.cross(E1);
+    double v = Q.dot(D);
+    if(v < 0 || v > (det - u)) continue;
+
+    // Calculate t and make sure it is positive otherwise it is behind the ray's origin
+    // Also make sure that it is the closest intersection thus far
+    double _P_E1 = 1.0 / P.dot(E1);
+    double t = _P_E1 * Q.dot(E2);
+    if(t < 0 || t > prev_t) continue;
+
+    // Scale u and v
+    u = _P_E1 * u;
+    v = _P_E1 * v;
 
     // Alright! The ray intersects this triangle
     intersected = true;
