@@ -637,6 +637,68 @@ int gr_mesh_cmd(lua_State* L)
   return 1;
 }
 
+// Create a polygonal mesh node with triangulated faces and per vertex normals
+extern "C"
+int gr_tri_mesh_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  std::shared_ptr<SceneNode> temp;
+  memcpy(&data->node, &temp, sizeof(std::shared_ptr<SceneNode>));
+  data->node = nullptr;
+
+  const char* name = luaL_checkstring(L, 1);
+
+  std::vector<Point3D> verts;
+  std::vector< std::vector<int> > faces;
+
+  luaL_checktype(L, 2, LUA_TTABLE);
+  int vert_count = luaL_getn(L, 2);
+  
+  luaL_argcheck(L, vert_count >= 1, 2, "Tuple of vertices expected");
+
+  for (int i = 1; i <= vert_count; i++) {
+    lua_rawgeti(L, 2, i);
+
+    Point3D vertex;
+    get_tuple(L, -1, &vertex[0], 3);
+    
+    verts.push_back(vertex);
+    lua_pop(L, 1);
+  }
+
+  luaL_checktype(L, 3, LUA_TTABLE);
+  int face_count = luaL_getn(L, 3);
+  
+  luaL_argcheck(L, face_count >= 1, 3, "Tuple of faces expected");
+
+  faces.resize(face_count);
+  
+  for (int i = 1; i <= face_count; i++) {
+    lua_rawgeti(L, 3, i);
+
+    luaL_checktype(L, -1, LUA_TTABLE);
+    int index_count = luaL_getn(L, -1);
+
+    luaL_argcheck(L, index_count >= 3, 3, "Tuple of indices expected");
+
+    faces[i - 1].resize(index_count);
+    get_tuple(L, -1, &faces[i - 1][0], index_count);
+    
+    lua_pop(L, 1);
+  }
+
+  std::shared_ptr<TriMesh> tri_mesh(std::make_shared<TriMesh>(verts, faces));
+  GRLUA_DEBUG(mesh);
+  data->node = std::make_shared<GeometryNode>(name, tri_mesh);
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Make a point light
 extern "C"
 int gr_light_cmd(lua_State* L)
@@ -989,6 +1051,7 @@ static const luaL_reg grlib_functions[] = {
   {"nh_sphere", gr_nh_sphere_cmd},
   {"nh_box", gr_nh_box_cmd},
   {"mesh", gr_mesh_cmd},
+  {"tri_mesh", gr_tri_mesh_cmd},
   {"light", gr_light_cmd},
   {"disc_light", gr_disc_light_cmd},
   {"render", gr_render_cmd},

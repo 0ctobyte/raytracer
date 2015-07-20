@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <limits>
+#include <unordered_map>
 
 Mesh::Mesh(const std::vector<Point3D>& verts,
            const std::vector< std::vector<int> >& faces)
@@ -142,6 +143,146 @@ bool Mesh::intersect(const Ray& ray, Intersection& j) const
         j.n = n;
       }
     }
+  }
+
+  return intersected;
+}
+
+TriMesh::TriMesh(const std::vector<Point3D>& verts, const std::vector<Face>& faces)
+  : Mesh(verts, faces)
+{
+  m_tfaces = triangulate(m_faces);
+  m_normals = normalate(m_verts, m_faces);
+  
+  m_faces.clear();
+  m_faces.resize(0);
+}
+
+TriMesh::TriMesh(const std::vector<Point3D>& verts, const std::vector<Vector3D>& normals, const std::vector<TriFace>& tfaces)
+  : Mesh(verts, std::vector<Face>()) 
+  , m_normals(normals)
+  , m_tfaces(tfaces)
+{
+}
+
+std::vector<TriMesh::TriFace> TriMesh::triangulate(const std::vector<Face>& faces) 
+{
+  // For each face, split the face up into triangles
+  std::vector<TriMesh::TriFace> tfaces;
+  for(auto face : faces)
+  {
+    if(face.size() < 3) continue;
+
+    for(size_t i = 2; i < face.size(); i++)
+    {
+      int i0 = face[0];
+      int i1 = face[i-1];
+      int i2 = face[i];
+
+      // Assume the same index is used to index into the vertex position and vertex normal lists
+      TriMesh::TriFace tface;
+      tface.push_back(std::make_tuple(i0, i0));
+      tface.push_back(std::make_tuple(i1, i1));
+      tface.push_back(std::make_tuple(i2, i2));
+
+      tfaces.push_back(tface);
+    }
+  }
+
+  return tfaces;
+}
+
+std::vector<Vector3D> TriMesh::normalate(const std::vector<Point3D>& verts, const std::vector<Mesh::Face>& faces)
+{
+  std::unordered_map<int, Vector3D> v_normals;
+
+  // Fill the map with a running sum of face normals for each vertex
+  int largest_key = 0;
+  for(auto face : faces) 
+  {
+    if(face.size() < 3) continue;
+
+    // Compute the normal for the face
+    Point3D P0 = verts[face[0]];
+    Point3D P1 = verts[face[1]];
+    Point3D P2 = verts[face[2]];
+
+    Vector3D n = (P1-P0).cross(P2-P0);
+
+    for(auto i : face) 
+    {
+      v_normals[i] = v_normals[i] + n;
+      largest_key = std::max<int>(largest_key, i);
+    }
+  }
+
+  // For each vertex average the face normals by normalization to get the vertex normal
+  std::vector<Vector3D> normals;
+  normals.reserve(largest_key+1);
+  for(auto kv : v_normals) normals[kv.first] = kv.second.normalized(); 
+
+  return normals;
+}
+
+bool TriMesh::intersect(const Ray& ray, Intersection& intersection) const
+{
+
+  // Check if bounding ball has been intersected first
+  // If not then the mesh cannot have been intersected
+  Intersection k;
+  if(!m_boundingBall.intersect(ray, k)) return false;
+
+  // Test intersection with each triangle
+  bool intersected = true;
+  double prev_t = std::numeric_limits<double>::infinity();
+  for(auto face : m_tfaces)
+  {
+    Point3D A = m_verts[std::get<0>(face[0])];
+    Point3D B = m_verts[std::get<0>(face[1])];
+    Point3D C = m_verts[std::get<0>(face[2])];
+
+    // Compute the intersection using Cramer's rule
+    // The following variables are the expanded terms from the matrix form of the system
+    double a = A[0] - B[0];
+    double b = A[1] - B[1];
+    double c = A[2] - B[2];
+    double d = A[0] - C[0];
+    double e = A[1] - C[1];
+    double f = A[2] - C[2];
+    double g = ray.direction()[0];
+    double h = ray.direction()[1];
+    double i = ray.direction()[2];
+    double j = A[0] - ray.origin()[0];
+    double k = A[1] - ray.origin()[1];
+    double l = A[2] - ray.origin()[2];
+
+    double ei_hf = e*i - h*f;
+    double gf_di = g*f - d*i;
+    double dh_eg = d*h - e*g;
+    double ak_jb = a*k - j*b;
+    double jc_al = j*c - a*l;
+    double bl_kc = b*l - k*c;
+
+    double M = a*ei_hf + b*gf_di + c*dh_eg;
+
+    // Calculate t and make sure it is positive otherwise it is behind the ray's origin
+    // Also make sure that is the closest intersection thus far
+    double t = (f*ak_jb + e*jc_al + d*bl_kc) / M;
+    if(t < 0 || t > prev_t) continue;
+
+    // Calculate u, barycentric coordinate, and make sure it is within range of [0, 1]
+    double u = (j*ei_hf + k*gf_di + l*dh_eg) / M;
+    if(u < 0 || u > 1) continue;
+
+    // Calculate v, barycentric coordinate, and make sure it is within range. u + v must be less than 1!
+    double v = (i*ak_jb + h*jc_al + g*bl_kc) / M;
+    if(v < 0 || v > (1 - u)) continue;
+
+    // Alright! The ray intersects this triangle
+    intersected = true;
+    prev_t = t;
+    intersection.q = ray.origin() + t * ray.direction();
+    intersection.n = (B-A).cross(C-A);
   }
 
   return intersected;
