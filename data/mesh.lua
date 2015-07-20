@@ -39,10 +39,10 @@ light_color = {1.0, 1.0, 1.0}
 
 -- on ceiling
 light1 = gr.disc_light({5, 10, -10}, light_color, {1, 0, 0}, {0, -1, 0}, 2)
-light2 = gr.disc_light({0, 0, -4}, light_color_2, {1, 0, 0}, {0, 0, 1}, 2)
+--light2 = gr.disc_light({0, 0, -4}, light_color_2, {1, 0, 0}, {0, 0, 1}, 2)
 
 gr.render(scene,
-	  'mesh.png', 256, 256,
+	  'mesh.png', 512, 512,
 	  {0, 2, -4.5}, {0, -5.871199, 4.612095}, {0, 1, 0}, 50,
 	  {0.1,0.1,0.1}, {light1},
     4, 4, 2, 1)

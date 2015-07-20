@@ -273,11 +273,16 @@ bool TriMesh::intersect(const Ray& ray, Intersection& intersection) const
     u = _P_E1 * u;
     v = _P_E1 * v;
 
+    // Get the per vertex normals
+    Vector3D nA = m_normals[std::get<1>(face[0])];
+    Vector3D nB = m_normals[std::get<1>(face[1])];
+    Vector3D nC = m_normals[std::get<1>(face[2])];
+
     // Alright! The ray intersects this triangle
     intersected = true;
     prev_t = t;
     intersection.q = ray.origin() + t * ray.direction();
-    intersection.n = (B-A).cross(C-A);
+    intersection.n = (1-u-v)*nA + u*nB + v*nC;
   }
 
   return intersected;
