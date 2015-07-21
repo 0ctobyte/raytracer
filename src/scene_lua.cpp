@@ -823,6 +823,7 @@ int gr_material_cmd(lua_State* L)
  
   // This needs to be done before newuserdata pushes the userdata on to the stack
   double ni = luaL_optnumber(L, 4, 0);
+  double glossiness = luaL_optnumber(L, 5, 0);
 
   gr_material_ud* data = (gr_material_ud*)lua_newuserdata(L, sizeof(gr_material_ud));
   std::shared_ptr<Material> temp;
@@ -835,7 +836,7 @@ int gr_material_cmd(lua_State* L)
 
   double shininess = luaL_checknumber(L, 3);
   
-  data->material = std::make_shared<PhongMaterial>(Colour(kd[0], kd[1], kd[2]), Colour(ks[0], ks[1], ks[2]), shininess, ni);
+  data->material = std::make_shared<PhongMaterial>(Colour(kd[0], kd[1], kd[2]), Colour(ks[0], ks[1], ks[2]), shininess, ni, glossiness);
 
   luaL_newmetatable(L, "gr.material");
   lua_setmetatable(L, -2);
