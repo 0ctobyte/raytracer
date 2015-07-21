@@ -96,9 +96,39 @@ Colour a4_shadow_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, cons
   return a4_lighting(ray, i, light, light_pos);
 }
 
-Ray a4_reflect(const Point3D& origin, const Vector3D& direction, const Vector3D& normal)
+std::tuple<bool, Ray> a4_reflect(const Point3D& origin, const Vector3D& direction, const Vector3D& normal, double glossiness, const std::function<double()>& uniform)
 {
-  return Ray(origin, direction - 2*direction.dot(normal)*normal);
+  Vector3D r = direction - 2*direction.dot(normal)*normal;
+
+  bool below_surface = false;
+  if(glossiness > 0.0)
+  {
+    Vector3D na = -r;
+    Vector3D U, V;
+
+    // Get the basis vectors for the square of size <glossiness>x<glossiness>
+    if(na[2] > na[0] && na[2] > na[1]) U = Vector3D(-na[1], na[0], 0.0);
+    else if(na[1] > na[0]) U = Vector3D(-na[2], 0.0, na[0]);
+    else U = Vector3D(0.0, -na[2], na[1]);
+    U.normalized();
+
+    V = na.cross(U).normalized();
+
+    // Randomly generate a 2D point on the square
+    double u = -(glossiness * 0.5) + uniform() * glossiness;
+    double v = -(glossiness * 0.5) + uniform() * glossiness;
+
+    // Use the 2D point and the basis vectors for the square to perturb the reflection ray to point to a location on the square
+    Point3D rp = Point3D(r[0], r[1], r[2]) + u * U + v * V;
+
+    // Set the new perturbed direction vector for the ray
+    r = Vector3D(rp[0], rp[1], rp[2]);
+
+    // Check if the perturbed ray is below the surface
+    below_surface = normal.dot(r) < 0; 
+  }
+
+  return std::tuple<bool, Ray>(below_surface, Ray(origin, r)); 
 }
 
 std::tuple<bool, double, Ray>   a4_refract(const Point3D& hit, const Vector3D& direction, const Vector3D& n, double ni)
@@ -144,7 +174,7 @@ std::tuple<bool, double, Ray>   a4_refract(const Point3D& hit, const Vector3D& d
   return std::tuple<bool, double, Ray>(cosT < 0, R, refracted_ray);
 }
 
-Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const std::list<std::shared_ptr<Light>>& lights, const Colour& ambient, const Colour& bg, const std::function<double()>& uniform, unsigned int recurse_level, unsigned int shadow_samples)
+Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const std::list<std::shared_ptr<Light>>& lights, const Colour& ambient, const Colour& bg, const std::function<double()>& uniform, int recurse_level, unsigned int shadow_samples)
 {
   // Test intersection of ray with scene for each light source
   Colour colour = bg;
@@ -158,9 +188,11 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     Vector3D n = i.n.normalized();
     Point3D hit = i.q + (1e-9)*n;
 
-    // Add the ambient colour to the object
+    // Get the material and the diffuse colour
     std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
     Colour diffuse = material->diffuse(i.u, i.v);
+    
+    // Add the ambient colour to the object
     colour = ambient * diffuse;
 
     if(diffuse != Colour(0.0, 0.0, 0.0))
@@ -184,8 +216,13 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     Colour reflected_colour(0.0, 0.0, 0.0);
     if(material->specular() != Colour(0.0, 0.0, 0.0) && recurse_level > 0) 
     {
-      Ray reflected_ray = a4_reflect(hit, ray.direction(), n);
-      reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, uniform, --recurse_level, shadow_samples);
+      std::tuple<bool, Ray> ret = a4_reflect(hit, ray.direction(), n, material->glossiness(), uniform);
+      bool below_surface = std::get<0>(ret);
+      if(!below_surface)
+      {
+        Ray reflected_ray = std::get<1>(ret);
+        reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, uniform, recurse_level-1, shadow_samples);
+      }
     }
 
     // Cast refracted rays and add the colour returned
@@ -199,7 +236,7 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
       if(!total_internal_reflection)
       {
         Ray refracted_ray = std::get<2>(ret);
-        refracted_colour = a4_trace_ray(refracted_ray, root, lights, ambient, refracted_colour, uniform, --recurse_level, shadow_samples);
+        refracted_colour = a4_trace_ray(refracted_ray, root, lights, ambient, refracted_colour, uniform, recurse_level-1, shadow_samples);
       }
     }
 
@@ -237,7 +274,7 @@ Colour a4_get_background_colour(Image& img, int x, int y, int width, int height)
     (up)*(vp)*Colour(img(i1, j1, 0), img(i1, j1, 1), img(i1, j1, 2));
 }
 
-void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsigned int width, unsigned int height, std::shared_ptr<SceneNode> root, const Matrix4x4 unproject, const Point3D eye, const Colour ambient, const std::list<std::shared_ptr<Light>> lights, unsigned int reflection_level, unsigned int aa_samples, unsigned int shadow_samples, Image* bgimg)
+void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsigned int width, unsigned int height, std::shared_ptr<SceneNode> root, const Matrix4x4 unproject, const Point3D eye, const Colour ambient, const std::list<std::shared_ptr<Light>> lights, unsigned int recurse_level, unsigned int aa_samples, unsigned int shadow_samples, Image* bgimg)
 {
   // Seed the rng and set the uniform distribution object
   std::mt19937 gen(std::chrono::system_clock::now().time_since_epoch().count());
@@ -271,7 +308,7 @@ void a4_render_thread(Image* img, unsigned int ystart, unsigned int yskip, unsig
           // Create the ray with origin at the eye point
           Ray ray(eye, p-eye);
 
-          colour = colour + a4_trace_ray(ray, root, lights, ambient, bg, uniform, reflection_level, shadow_samples);
+          colour = colour + a4_trace_ray(ray, root, lights, ambient, bg, uniform, recurse_level, shadow_samples);
         }
       }
 
@@ -311,7 +348,7 @@ void a4_render(// What to render
                const std::list<std::shared_ptr<Light>>& lights,
                // Optional parameters: Reflection recursive level, antialiasing samples
                unsigned int num_threads,
-               unsigned int reflection_level,
+               unsigned int recurse_level,
                unsigned int aa_samples,
                unsigned int shadow_samples,
                const std::string& bgfilename
@@ -329,7 +366,7 @@ void a4_render(// What to render
     if (I != lights.begin()) std::cerr << ", ";
     std::cerr << *I->get();
   }
-  std::cerr << ", " << num_threads << ", " << reflection_level << ", " << aa_samples << ", " << shadow_samples;
+  std::cerr << ", " << num_threads << ", " << recurse_level << ", " << aa_samples << ", " << shadow_samples;
   std::cerr << ", " << bgfilename << "});" << std::endl;
 
   // Open the background image file if one is given
@@ -352,7 +389,7 @@ void a4_render(// What to render
   std::vector<std::thread> threads(num_threads);
   for(unsigned int i = 0; i < num_threads; i++)
   {
-    threads[i] = std::thread(a4_render_thread, &img, i, num_threads, width, height, root, unproject, eye, ambient, lights, reflection_level, aa_samples, shadow_samples, &bg);
+    threads[i] = std::thread(a4_render_thread, &img, i, num_threads, width, height, root, unproject, eye, ambient, lights, recurse_level, aa_samples, shadow_samples, &bg);
     if(threads[i].get_id() == std::thread::id())
     {
       std::cerr << "Abort: Failed to create thread " << i << std::endl;

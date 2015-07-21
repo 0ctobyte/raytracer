@@ -19,9 +19,9 @@ void a4_render(// What to render
                // Lighting parameters
                const Colour& ambient,
                const std::list<std::shared_ptr<Light>>& lights,
-               // Optional parameters: Reflection recursive level, antialiasing samples
+               // Optional parameters: Recursion level, antialiasing samples, shadow rays, background image
                unsigned int num_threads,
-               unsigned int reflection_level,
+               unsigned int recurse_level,
                unsigned int aa_samples,
                unsigned int shadow_samples,
                const std::string& bgfilename
