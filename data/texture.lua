@@ -28,12 +28,12 @@ gr.render(scene,
 	  'texture.png', 512, 512,
 	  {0, 0, -1}, {0, 0, 1}, {0, 1, 0}, 50,
 	  {0.1,0.1,0.1}, {light1, light2},
-    4, 4, 4, 1, 'backgrounds/starry.sky.png')
+    4, 4, 4, 1, 1, 'backgrounds/starry.sky.png')
 
 -- widescreen    
 --gr.render(scene,
 --	  'texture.2048.512.png', 2048, 512,
 --	  {0, 0, -1}, {0, 0, 1}, {0, 1, 0}, 30,
 --	  {0.1,0.1,0.1}, {light1, light2},
---    4, 4, 4, 1, 'backgrounds/starry.sky.png')
+--    4, 4, 4, 1, 1, 'backgrounds/starry.sky.png')
 

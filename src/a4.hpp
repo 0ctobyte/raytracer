@@ -24,6 +24,7 @@ void a4_render(// What to render
                unsigned int recurse_level,
                unsigned int aa_samples,
                unsigned int shadow_samples,
+               unsigned int glossy_samples,
                const std::string& bgfilename
                );
 

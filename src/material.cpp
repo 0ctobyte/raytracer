@@ -4,14 +4,14 @@ Material::~Material()
 {
 }
 
-PhongMaterial::PhongMaterial(const Colour& kd, const Colour& ks, double shininess, double ni, double glossiness)
-  : m_kd(kd), m_ks(ks), m_shininess(shininess), m_ni(ni), m_glossiness(glossiness)
+PhongMaterial::PhongMaterial(const Colour& kd, const Colour& ks, double shininess, double ni)
+  : m_kd(kd), m_ks(ks), m_shininess(shininess), m_ni(ni)
   , m_has_texture(false), m_has_bumpmap(false)
 {
 }
 
 PhongMaterial::PhongMaterial(std::shared_ptr<const PhongMaterial> material)
-  : m_kd(material->m_kd), m_ks(material->m_ks), m_shininess(material->m_shininess), m_ni(material->m_ni), m_glossiness(material->m_glossiness)
+  : m_kd(material->m_kd), m_ks(material->m_ks), m_shininess(material->m_shininess), m_ni(material->m_ni)
   , m_texture(material->m_texture), m_bumpmap(material->m_bumpmap)
   , m_has_texture(material->m_has_texture), m_has_bumpmap(material->m_has_bumpmap), m_bumpscale(material->m_bumpscale)
 {

@@ -13,7 +13,7 @@ length = 10
 
 white = gr.material({1.0, 1.0, 1.0}, {0, 0, 0}, 5)
 
-teapot = gr.tri_mesh('teapot', readobj('objs/teapot_n.obj'))
+teapot = gr.mesh('teapot', readobj('objs/teapot_n.obj'))
 scene:add_child(teapot)
 teapot:set_material(white)
 teapot:translate(-0.05, 0, -3.1)
@@ -42,8 +42,8 @@ light_color_3 = {1.0, 1.0, 1.0}
 light1 = gr.disc_light({5, 10, -10}, light_color, {1, 0, 0}, {-5.05, -10, 6.9}, 2)
 
 gr.render(scene,
-	  'mesh.png', 512, 512,
+	  'mesh.flat.png', 512, 512,
 	  {0, 1, -4.5}, {0, -2.871199, 4.612095}, {0, 1, 0}, 50,
 	  {0.1,0.1,0.1}, {light1},
-    4, 4, 4, 1)
+    4, 4, 4, 32)
 

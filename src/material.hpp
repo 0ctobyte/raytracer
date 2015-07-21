@@ -17,7 +17,7 @@ protected:
 
 class PhongMaterial : public Material {
 public:
-  PhongMaterial(const Colour& kd, const Colour& ks, double shininess, double ni, double glossiness);
+  PhongMaterial(const Colour& kd, const Colour& ks, double shininess, double ni);
   PhongMaterial(std::shared_ptr<const PhongMaterial> material);
   virtual ~PhongMaterial();
   
@@ -36,10 +36,6 @@ public:
   double ni() const
   {
     return m_ni;
-  }
-  double glossiness() const
-  {
-    return m_glossiness;
   }
 
   void set_texture(const Image& texture) 
@@ -63,7 +59,6 @@ protected:
 
   double m_shininess;
   double m_ni;
-  double m_glossiness;
   
   Image m_texture;
   Image m_bumpmap;
