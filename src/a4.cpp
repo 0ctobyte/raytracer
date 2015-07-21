@@ -113,7 +113,6 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     // Add the ambient colour to the object
     std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
     Colour diffuse = material->diffuse(i.u, i.v);
-    Colour specular = material->specular();
     colour = ambient * diffuse;
 
     if(diffuse != Colour(0.0, 0.0, 0.0))
@@ -143,14 +142,47 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
 
     // Cast refracted rays and add the colour returned
     double R = 1.0;
-    Colour _specular(1.0-specular.R(), 1.0-specular.G(), 1.0-specular.B());
     Colour refracted_colour(0.0, 0.0, 0.0);
     if(material->ni() > 0 && recurse_level > 0)
     {
+      Vector3D normal = n;
+      double cosI = ray.direction().dot(normal);
+      double n1, n2;
+      if(cosI > 0)
+      {
+        // direction and normal are in the same direction so ray originates from inside primitive
+        n1 = material->ni();
+        n2 = 1.0;
+        normal = -normal;
+      }
+      else
+      {
+        // Ray enters primitive from outside
+        n1 = 1.0;
+        n2 = material->ni();
+        cosI = -cosI;
+      }
+
+      // Check for total internal reflection
+      double nr = n1 / n2;
+      double cosT = 1.0 - (nr * nr) * (1.0 - (cosI * cosI));
+      if(cosT >= 0)
+      {
+        cosT = sqrt(cosT);
+
+        // Compute Fresnel coefficient
+        double a = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+        double b = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+        R = ((a * a) + (b * b)) * 0.5;
+
+        // Cast the refracted ray
+        Ray refracted_ray(i.q - (1e-9) * normal, nr * ray.direction() + (nr * cosI - cosT) * normal);
+        refracted_colour = a4_trace_ray(refracted_ray, root, lights, ambient, refracted_colour, uniform, --recurse_level, shadow_samples);
+      }
     }
 
     // Add the reflection
-    colour = colour + (R * reflected_colour * specular) + ((1- R) * refracted_colour * _specular);
+    colour = colour + (R * reflected_colour) + ((1 - R) * refracted_colour);
   }
 
   return colour;
