@@ -181,8 +181,8 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
       }
     }
 
-    // Add the reflection
-    colour = colour + (R * reflected_colour) + ((1 - R) * refracted_colour);
+    // Add the reflection and refraction components and scale them with the Fresnel coefficient
+    colour = colour + material->specular() * ((R * reflected_colour) + ((1 - R) * refracted_colour));
   }
 
   return colour;
