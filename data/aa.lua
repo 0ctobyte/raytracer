@@ -40,8 +40,7 @@ light_color = {0.780131, 0.780409, 0.775833}
 light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 light_color = {1.0, 1.0, 1.0}
 
--- on ceiling
-light1 = gr.disc_light({5, 10, -10}, light_color, {1, 0, 0}, {-9.5, -11, -1}, 5)
+light1 = gr.disc_light({5, 10, -10}, light_color, {1, 0, 0}, {-5, -10.2, 10}, 5)
 
 aa = 4
 ss = 1

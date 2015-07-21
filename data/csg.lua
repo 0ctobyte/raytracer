@@ -107,20 +107,12 @@ back_wall:scale(room_width, 1.0, room_height)
 light_color = {0.780131, 0.780409, 0.775833}
 light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 
--- on ceiling
-light1 = gr.light({0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
-
--- by camera
-light2 = gr.light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0})
-
--- Left wall
-light3 = gr.light({room_width/2.0-2, room_height-6, -3}, light_color_2, {1, 0, 0})
-
---sqlight = gr.rect_light({0, room_height - 2.01, -2}, 3, 3, light_color, {1,0,0}, 10)
+light1 = gr.disc_light({0, room_height - 3.0, -3}, light_color_2, {1, 0, 0}, {0, -1, 0}, 1.0)
+light2 = gr.disc_light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0}, {0, -1, 0}, 1.0)
 
 gr.render(scene,
 	  'csg.png', 512, 512,
 	  {0, room_height/2.0, -room_length/2.0}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
 	  {0.3,0.3,0.3}, {light1, light2},
-    4, 4, 2, 1)
+    4, 4, 4, 1)
 

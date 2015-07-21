@@ -58,7 +58,6 @@ scene:rotate('y', 25.0)
 light_color = {0.780131, 0.780409, 0.775833}
 light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 
--- on ceiling
 light1 = gr.disc_light({0, room_height - 3.0, -3}, light_color, {1, 0, 0}, {0.0, -1.0, 0.0}, 5.0)
 light2 = gr.disc_light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0}, {0.0, 0.0, 1.0}, 1.0)
 

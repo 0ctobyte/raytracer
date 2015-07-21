@@ -21,7 +21,6 @@ light_color = {0.780131, 0.780409, 0.775833}
 light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 light_color = {1.0, 1.0, 1.0}
 
--- on ceiling
 light1 = gr.light({10, 10, 0}, light_color, {1, 0, 0})
 light2 = gr.light({10, 10, 0}, light_color, {1, 0, 0})
 
