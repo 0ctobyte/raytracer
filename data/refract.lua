@@ -12,7 +12,7 @@ height = 3.0
 sphere = gr.sphere('sphere')
 scene:add_child(sphere)
 sphere:set_material(glass)
-sphere:translate(5, radius-1, -5)
+sphere:translate(8, radius-1, -7)
 sphere:scale(radius, radius, radius)
 
 -- Room
@@ -66,5 +66,5 @@ gr.render(scene,
 	  'refract.png', 512, 512,
 	  {0, room_height/2.0-2, -room_length/2.0 - 5}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
 	  {0.2,0.2,0.2}, {light1},
-    4, 4, 2, 1)
+    4, 4, 4, 1)
 
