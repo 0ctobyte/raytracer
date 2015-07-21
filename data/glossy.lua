@@ -5,11 +5,11 @@ require('materials')
 scene = gr.node('scene')
 
 -- light blue: {0.4, 0.698, 1.0}
-mirror0 = gr.material({0, 0, 0}, {0.8, 0.8, 1.0}, 0.1)
-mirror1 = gr.material({0, 0, 0}, {0.8, 0.8, 1.0}, 1.0)
-mirror2 = gr.material({0, 0, 0}, {0.8, 0.8, 1.0}, 10.0)
-mirror3 = gr.material({0, 0, 0}, {0.8, 0.8, 1.0}, 100.0)
-mirror4 = gr.material({0, 0, 0}, {0.8, 0.8, 1.0}, 1000.0)
+mirror0 = gr.material({0, 0, 0}, {1.0, 1.0, 1.0}, 0.1)
+mirror1 = gr.material({0, 0, 0}, {1.0, 1.0, 1.0}, 1.0)
+mirror2 = gr.material({0, 0, 0}, {1.0, 1.0, 1.0}, 10.0)
+mirror3 = gr.material({0, 0, 0}, {1.0, 1.0, 1.0}, 100.0)
+mirror4 = gr.material({0, 0, 0}, {1.0, 1.0, 1.0}, 1000.0)
 
 radius = 1.0
 height = 3.0
@@ -103,5 +103,5 @@ gr.render(scene,
 	  'glossy.png', 512, 512,
 	  {0, room_height/2.0, 0}, {0, -room_height, -room_length}, {0, 0, -1}, 50,
 	  {0.2,0.2,0.2}, {light1, light2},
-    4, 4, 4, 1, 8)
+    4, 4, 4, 1, 16)
 
