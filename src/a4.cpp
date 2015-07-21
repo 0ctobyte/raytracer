@@ -96,6 +96,54 @@ Colour a4_shadow_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, cons
   return a4_lighting(ray, i, light, light_pos);
 }
 
+Ray a4_reflect(const Point3D& origin, const Vector3D& direction, const Vector3D& normal)
+{
+  return Ray(origin, direction - 2*direction.dot(normal)*normal);
+}
+
+std::tuple<bool, double, Ray>   a4_refract(const Point3D& hit, const Vector3D& direction, const Vector3D& n, double ni)
+{
+  Ray refracted_ray(Point3D(0.0, 0.0, 0.0), Vector3D(0.0, 0.0, 0.0));
+  double R = 1.0;
+  
+  Vector3D normal = n;
+  double cosI = direction.dot(normal);
+  double n1, n2;
+
+  if(cosI > 0)
+  {
+    // direction and normal are in the same direction so ray originates from inside primitive
+    n1 = ni;
+    n2 = 1.0;
+    normal = -normal;
+  }
+  else
+  {
+    // Ray enters primitive from outside
+    n1 = 1.0;
+    n2 = ni;
+    cosI = -cosI;
+  }
+
+  // Check for total internal reflection
+  double nr = n1 / n2;
+  double cosT = 1.0 - (nr * nr) * (1.0 - (cosI * cosI));
+  if(cosT >= 0)
+  {
+    cosT = sqrt(cosT);
+
+    // Compute Fresnel coefficient
+    double a = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
+    double b = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
+    R = ((a * a) + (b * b)) * 0.5;
+
+    // Cast the refracted ray
+    refracted_ray = Ray(hit - (1e-9) * normal, nr * direction + (nr * cosI - cosT) * normal);
+  }
+
+  return std::tuple<bool, double, Ray>(cosT < 0, R, refracted_ray);
+}
+
 Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const std::list<std::shared_ptr<Light>>& lights, const Colour& ambient, const Colour& bg, const std::function<double()>& uniform, unsigned int recurse_level, unsigned int shadow_samples)
 {
   // Test intersection of ray with scene for each light source
@@ -136,7 +184,7 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     Colour reflected_colour(0.0, 0.0, 0.0);
     if(material->specular() != Colour(0.0, 0.0, 0.0) && recurse_level > 0) 
     {
-      Ray reflected_ray(hit, ray.direction() - 2*ray.direction().dot(n)*n);
+      Ray reflected_ray = a4_reflect(hit, ray.direction(), n);
       reflected_colour = a4_trace_ray(reflected_ray, root, lights, ambient, reflected_colour, uniform, --recurse_level, shadow_samples);
     }
 
@@ -145,38 +193,12 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
     Colour refracted_colour(0.0, 0.0, 0.0);
     if(material->ni() > 0 && recurse_level > 0)
     {
-      Vector3D normal = n;
-      double cosI = ray.direction().dot(normal);
-      double n1, n2;
-      if(cosI > 0)
+      std::tuple<bool, double, Ray> ret = a4_refract(i.q, ray.direction(), n, material->ni());
+      bool total_internal_reflection = std::get<0>(ret);
+      R = std::get<1>(ret);
+      if(!total_internal_reflection)
       {
-        // direction and normal are in the same direction so ray originates from inside primitive
-        n1 = material->ni();
-        n2 = 1.0;
-        normal = -normal;
-      }
-      else
-      {
-        // Ray enters primitive from outside
-        n1 = 1.0;
-        n2 = material->ni();
-        cosI = -cosI;
-      }
-
-      // Check for total internal reflection
-      double nr = n1 / n2;
-      double cosT = 1.0 - (nr * nr) * (1.0 - (cosI * cosI));
-      if(cosT >= 0)
-      {
-        cosT = sqrt(cosT);
-
-        // Compute Fresnel coefficient
-        double a = (n1 * cosI - n2 * cosT) / (n1 * cosI + n2 * cosT);
-        double b = (n2 * cosI - n1 * cosT) / (n2 * cosI + n1 * cosT);
-        R = ((a * a) + (b * b)) * 0.5;
-
-        // Cast the refracted ray
-        Ray refracted_ray(i.q - (1e-9) * normal, nr * ray.direction() + (nr * cosI - cosT) * normal);
+        Ray refracted_ray = std::get<2>(ret);
         refracted_colour = a4_trace_ray(refracted_ray, root, lights, ambient, refracted_colour, uniform, --recurse_level, shadow_samples);
       }
     }
