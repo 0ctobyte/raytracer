@@ -3,7 +3,7 @@ OBJECTS = $(SOURCES:.cpp=.o)
 DEPENDS = $(SOURCES:.cpp=.d)
 LDFLAGS = $(shell pkg-config --libs lua5.1) $(shell pkg-config --libs libpng12) 
 CPPFLAGS = $(shell pkg-config --cflags lua5.1) $(shell pkg-config --cflags libpng12)
-CXXFLAGS = $(CPPFLAGS) -std=c++11 -W -Wall -Wno-unused-parameter -g
+CXXFLAGS = $(CPPFLAGS) -std=c++11 -W -Wall -Wno-unused-parameter -O3 -flto
 CXX = clang++
 MAIN = rt
 
