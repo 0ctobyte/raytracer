@@ -9,6 +9,7 @@ radius = 0.7
 length = 30
 
 brown = gr.material({0.51953125, 0.3671875, 0.2578125}, {0, 0, 0}, 1)
+turquoise = gr.material({0.396, 0.74151, 0.69102}, {0, 0, 0}, 12.8)
 
 s = gr.sphere('s')
 scene:add_child(s)

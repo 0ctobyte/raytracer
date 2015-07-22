@@ -78,25 +78,35 @@ double Perlin::noise(double x, double y, double z)
       w);
 }
 
+double Perlin::turbulence(double x, double y, double z, unsigned octaves, double freq, double gain)
+{
+  double t = 0;
+  double scale = 1;
+  double amplitude = 1;
+  for(unsigned i = 0; i < octaves; i++)
+  {
+    t += amplitude * Perlin::noise(x * scale, y * scale, z * scale);
+    scale *= freq;
+    amplitude *= gain;
+  }
+
+  return std::abs(t);
+};
+
 double Perlin::marble(double x, double y, double z)
 {
-  auto turbulence = [](double x, double y, double z) -> double {
-    double t = 0;
-    for(double scale = 1.0; scale > 0.01; scale /= 2.0)
-    {
-      double _scale = 1.0 / scale;
-      t += fabs(Perlin::noise(x * _scale, y * _scale, z * _scale) * scale);
-    }
-
-    return t;
-  };
-
-  return sin(x + turbulence(x, y, z));
+  // http://www.sci.utah.edu/~leenak/IndStudy_reportfall/MarbleCode.txt 
+  return cos(z * 0.1 + 6 * turbulence(x, y, z, 5, 2, 0.6));
 }
 
 double Perlin::wood(double x, double y, double z)
 {
   double grain = ((1.0 + Perlin::noise(std::abs(x), std::abs(y), std::abs(z))) / 2.0) * 30;
   return (grain - (int)grain);
+}
+
+double Perlin::cloud(double x, double y, double z)
+{
+  return cos(z * 0.5 + 2 * turbulence(x, y, z, 6, 2, 0.5) * 0.9);
 }
 
