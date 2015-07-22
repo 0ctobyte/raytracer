@@ -1,4 +1,5 @@
 #include "material.hpp"
+#include "perlin.hpp"
 
 Material::~Material()
 {
@@ -6,14 +7,14 @@ Material::~Material()
 
 PhongMaterial::PhongMaterial(const Colour& kd, const Colour& ks, double shininess, double ni)
   : m_kd(kd), m_ks(ks), m_shininess(shininess), m_ni(ni)
-  , m_has_texture(false), m_has_bumpmap(false)
+  , m_has_texture(false), m_has_bumpmap(false), m_perlin_noise(-1)
 {
 }
 
 PhongMaterial::PhongMaterial(std::shared_ptr<const PhongMaterial> material)
   : m_kd(material->m_kd), m_ks(material->m_ks), m_shininess(material->m_shininess), m_ni(material->m_ni)
   , m_texture(material->m_texture), m_bumpmap(material->m_bumpmap)
-  , m_has_texture(material->m_has_texture), m_has_bumpmap(material->m_has_bumpmap), m_bumpscale(material->m_bumpscale)
+  , m_has_texture(material->m_has_texture), m_has_bumpmap(material->m_has_bumpmap), m_bumpscale(material->m_bumpscale), m_perlin_noise(-1)
 {
 }
 
@@ -45,6 +46,13 @@ Colour PhongMaterial::diffuse(double u, double v) const
     (1-up)*(vp)*Colour(m_texture(i, j1, 0), m_texture(i, j1, 1), m_texture(i, j1, 2)) +
     (up)*(1-vp)*Colour(m_texture(i1, j, 0), m_texture(i1, j, 1), m_texture(i1, j, 2)) +
     (up)*(vp)*Colour(m_texture(i1, j1, 0), m_texture(i1, j1, 1), m_texture(i1, j1, 2));
+}
+
+Colour PhongMaterial::diffuse(double x, double y, double z) const
+{
+  double t = 0, scale = 1.0;
+  for(int i = 0; i < 10; i++, scale /= 2.0) t += Perlin::noise(Point3D(x / scale, y / scale, z / scale)) * scale;
+  return m_kd * sin(x + t);
 }
 
 Vector3D PhongMaterial::bump(const Vector3D& n, const Vector3D& pu, const Vector3D& pv, double u, double v) const

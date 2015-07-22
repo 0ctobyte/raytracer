@@ -949,6 +949,31 @@ int gr_node_set_bumpmap_cmd(lua_State* L)
   return 0;
 }
 
+// Set a node's perlin function
+extern "C"
+int gr_node_set_perlin_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* selfdata = (gr_node_ud*)luaL_checkudata(L, 1, "gr.node");
+  luaL_argcheck(L, selfdata != 0, 1, "Node expected");
+
+  std::shared_ptr<GeometryNode> self = std::dynamic_pointer_cast<GeometryNode>(selfdata->node);
+  luaL_argcheck(L, self, 1, "Geometry node expected");
+  
+  std::shared_ptr<PhongMaterial> material = std::dynamic_pointer_cast<PhongMaterial>(std::const_pointer_cast<Material>(self->get_material()));
+  luaL_argcheck(L, material, 1, "Node does not have a material");
+ 
+  int perlin = luaL_checkinteger(L, 2);
+
+  std::shared_ptr<PhongMaterial> new_material = std::make_shared<PhongMaterial>(material);
+  new_material->set_perlin_noise(perlin);
+
+  self->set_material(new_material);
+
+  return 0;
+}
+
 // Add a scaling transformation to a node.
 extern "C"
 int gr_node_scale_cmd(lua_State* L)
@@ -1094,6 +1119,7 @@ static const luaL_reg grlib_node_methods[] = {
   {"set_material", gr_node_set_material_cmd},
   {"set_texture", gr_node_set_texture_cmd},
   {"set_bumpmap", gr_node_set_bumpmap_cmd},
+  {"set_perlin", gr_node_set_perlin_cmd},
   {"scale", gr_node_scale_cmd},
   {"rotate", gr_node_rotate_cmd},
   {"translate", gr_node_translate_cmd},

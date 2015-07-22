@@ -1,5 +1,6 @@
 #include "a4.hpp"
 #include "image.hpp"
+#include "perlin.hpp"
 
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -49,7 +50,7 @@ Colour a4_lighting(const Ray& ray, const Intersection& i, const std::shared_ptr<
   std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
   Point3D surface_point = i.q;
   Vector3D normal = material->bump(i.n, i.pu, i.pv, i.u, i.v);
-  Colour material_diffuse = material->diffuse(i.u, i.v);
+  Colour material_diffuse = material->use_perlin() ? material->diffuse(surface_point[0], surface_point[1], surface_point[2]) : material->diffuse(i.u, i.v);
   Colour light_colour = light->getColour();
     
   // Set up the parameters for the lights
@@ -188,12 +189,12 @@ Colour a4_trace_ray(const Ray& ray, const std::shared_ptr<SceneNode> root, const
 
     // Get the material and the diffuse colour
     std::shared_ptr<const PhongMaterial> material = std::dynamic_pointer_cast<const PhongMaterial>(i.m);
-    Colour diffuse = material->diffuse(i.u, i.v);
+    Colour diffuse = material->use_perlin() ? material->diffuse(i.q[0], i.q[1], i.q[2]) : material->diffuse(i.u, i.v);
     
     // Add the ambient colour to the object
     colour = ambient * diffuse;
 
-    if(diffuse != Colour(0.0, 0.0, 0.0))
+    if(material->diffuse() != Colour(0.0, 0.0, 0.0))
     {
       for(auto light : lights)
       {
@@ -374,6 +375,9 @@ void a4_render(// What to render
   }
   std::cerr << ", " << num_threads << ", " << recurse_level << ", " << aa_samples << ", " << shadow_samples << ", " << glossy_samples;
   std::cerr << ", " << bgfilename << "});" << std::endl;
+
+  // Initialize Perlin noise hash table
+  Perlin::init();
 
   // Open the background image file if one is given
   Image bg;
