@@ -3,12 +3,13 @@
 #include <cmath>
 
 std::array<int, HASH_P+HASH_P+1> Perlin::P;
-std::array<Vector3D, HASH_G+1> Perlin::G;
 
 void Perlin::init()
 {
-  int permutation[] = { 151,160,137,91,90,15,                 // Hash lookup table as defined by Ken Perlin.  This is a randomly
-    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,    // arranged array of all numbers from 0-255 inclusive.
+  // Hash lookup table as defined by Ken Perlin.  This is a randomly
+  // arranged array of all numbers from 0-255 inclusive.
+  int permutation[] = { 151,160,137,91,90,15,                 
+    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,    
     190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
     88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
     77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
@@ -24,18 +25,11 @@ void Perlin::init()
 
   // Insert random values into the hash
   for(int i = 0; i < (HASH_P + HASH_P + 1); i++) P[i] = permutation[i & HASH_P];
-
-  G = {{
-    Vector3D(1, 1, 0), Vector3D(-1, 1, 0), Vector3D(1, -1, 0), Vector3D(-1, -1, 0),
-    Vector3D(1, 0, 1), Vector3D(-1, 0, 1), Vector3D(1, 0, -1), Vector3D(-1, 0, -1),
-    Vector3D(0, 1, 1), Vector3D(0, -1, 1), Vector3D(0, 1, -1), Vector3D(0, -1, -1),
-    Vector3D(1, 1, 0), Vector3D(0, -1, 1), Vector3D(-1, 1, 0), Vector3D(0, -1, -1)
-  }};
 }
 
 double Perlin::noise(double x, double y, double z) 
 {
-  auto splerp = [](double t) -> double {
+  auto fade = [](double t) -> double {
     return t * t * t * (t * (t * 6 - 15) + 10);
   };
 
@@ -44,35 +38,44 @@ double Perlin::noise(double x, double y, double z)
   };
 
   auto grad = [](int hash, double x, double y, double z) {
-    return G[hash & HASH_G].dot(Vector3D(x, y, z));
+    // Convert low 4 bits of hash into 12 gradient vectors
+    int h = hash & HASH_G;
+    double u = h < 8 ? x : y;
+    double v = h < 4 ? y : h == 12 || h == 14 ? x : z;
+    return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
   };
 
   // Get the nearest point smaller than the given point in in the unit integer lattice
   // And scale it so that it can index the permuation table
-  int x0 = ((x > 0) ? (int)x : (int)x-1) & HASH_P;
-  int y0 = ((y > 0) ? (int)y : (int)y-1) & HASH_P;
-  int z0 = ((z > 0) ? (int)z : (int)z-1) & HASH_P;
+  int x0 = (long long)std::floor(x) & HASH_P;
+  int y0 = (long long)std::floor(y) & HASH_P;
+  int z0 = (long long)std::floor(z) & HASH_P;
 
   // Get the fractional parts of the point coordinates
-  double xf = x - (int)x;
-  double yf = y - (int)y;
-  double zf = z - (int)z;
+  double xf = x - std::floor(x);
+  double yf = y - std::floor(y);
+  double zf = z - std::floor(z);
 
   // Calculated the splined interpolation values of the point in the unit lattice
-  double u = splerp(xf);
-  double v = splerp(yf);
-  double w = splerp(zf);
+  double u = fade(xf);
+  double v = fade(yf);
+  double w = fade(zf);
+
+  // Get hash coordinates of the 8 unit cube corners
+  int A = P[x0]+y0, AA = P[A]+z0, AB = P[A+1]+z0;
+  int B = P[x0+1]+y0, BA = P[B]+z0, BB = P[B+1]+z0;
 
   // Trilinearly interpolate the influence values
-  double n0, n1, ix0, ix1;
-  n0 = lerp(grad(P[P[P[x0]+y0]+z0], xf, yf, zf), grad(P[P[P[x0+1]+y0]+z0], xf-1, yf, zf), u);
-  n1 = lerp(grad(P[P[P[x0]+y0+1]+z0], xf, yf-1, zf), grad(P[P[P[x0+1]+y0+1]+z0], xf-1, yf-1, zf), u);
-  ix0 = lerp(n0, n1, v);
-  n0 = lerp(grad(P[P[P[x0]+y0]+z0+1], xf, yf, zf-1), grad(P[P[P[x0+1]+y0]+z0+1], xf-1, yf, zf-1), u);
-  n1 = lerp(grad(P[P[P[x0]+y0+1]+z0+1], xf, yf-1, zf-1), grad(P[P[P[x0+1]+y0+1]+z0+1], xf-1, yf-1, zf-1), u);
-  ix1 = lerp(n0, n1, v);
-
-  return (lerp(ix0, ix1, w) + 1.0) / 2.0;
+  return lerp(
+      lerp(
+        lerp(grad(P[AA], xf, yf, zf), grad(P[BA], xf-1, yf, zf), u), 
+        lerp(grad(P[AB], xf, yf-1, zf), grad(P[BB], xf-1, yf-1, zf), u), 
+        v), 
+      lerp(
+        lerp(grad(P[AA+1], xf, yf, zf-1), grad(P[BA+1], xf-1, yf, zf-1), u), 
+        lerp(grad(P[AB+1], xf, yf-1, zf-1), grad(P[BB+1], xf-1, yf-1, zf-1), u), 
+        v), 
+      w);
 }
 
 double Perlin::marble(double x, double y, double z)
@@ -93,7 +96,7 @@ double Perlin::marble(double x, double y, double z)
 
 double Perlin::wood(double x, double y, double z)
 {
-  double grain = Perlin::noise(x, y, z) * 20;
+  double grain = ((1.0 + Perlin::noise(std::abs(x), std::abs(y), std::abs(z))) / 2.0) * 30;
   return (grain - (int)grain);
 }
 

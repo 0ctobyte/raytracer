@@ -50,7 +50,7 @@ Colour PhongMaterial::diffuse(double u, double v) const
 
 Colour PhongMaterial::diffuse(double x, double y, double z) const
 {
-  return m_kd * Perlin::marble(x, y, z);
+  return m_kd * Perlin::wood(x, y, z);
 }
 
 Vector3D PhongMaterial::bump(const Vector3D& n, const Vector3D& pu, const Vector3D& pv, double u, double v) const

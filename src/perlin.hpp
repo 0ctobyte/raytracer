@@ -1,7 +1,6 @@
 #ifndef CS488_PERLIN_HPP
 #define CS488_PERLIN_HPP
 
-#include "algebra.hpp"
 #include <array>
 
 #define HASH_P (0xff)
@@ -17,7 +16,6 @@ public:
 
 private: 
   static std::array<int, HASH_P+HASH_P+1> P; 
-  static std::array<Vector3D, HASH_G+1> G;
 };
 
 #endif // CS488_PERLIN_HPP
