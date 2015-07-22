@@ -50,9 +50,7 @@ Colour PhongMaterial::diffuse(double u, double v) const
 
 Colour PhongMaterial::diffuse(double x, double y, double z) const
 {
-  double t = 0, scale = 1.0;
-  for(int i = 0; i < 10; i++, scale /= 2.0) t += Perlin::noise(Point3D(x / scale, y / scale, z / scale)) * scale;
-  return m_kd * sin(x + t);
+  return m_kd * Perlin::marble(x, y, z);
 }
 
 Vector3D PhongMaterial::bump(const Vector3D& n, const Vector3D& pu, const Vector3D& pv, double u, double v) const

@@ -28,6 +28,8 @@ backwall:translate(0, 0, 2)
 backwall:rotate('x', -70)
 backwall:scale(length, 1.0, length)
 
+scene:translate(1, 1, -1)
+
 -- lights
 light_color = {0.780131, 0.780409, 0.775833}
 light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
@@ -37,7 +39,7 @@ light1 = gr.disc_light({0, 10, -10}, light_color, {1, 0, 0}, {0, -10, 10}, 5)
 
 gr.render(scene,
     'perlin.png', 512, 512,
-	  {0, 2, -5}, {0, -3.011505, 5.56155}, {0, 1, 0}, 50,
+	  {1.25, 3, -6}, {1, -1.5, 5}, {0, 1, 0}, 50,
 	  {0.1,0.1,0.1}, {light1},
     4, 4, 4, 1)
 
