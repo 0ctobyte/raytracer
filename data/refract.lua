@@ -28,7 +28,7 @@ room:add_child(floor)
 floor:set_material(white_cornell)
 floor:set_texture('textures/pavement04.png')
 floor:set_bumpmap('bumps/pavement04-bump.png', 0.05)
-floor:translate(room_width/2.0, -1.0, -room_width/2.0)
+floor:translate(room_width/2.0, -1.0, -room_width)
 floor:scale(room_width*2, 1, room_width*2)
 
 -- right wall
@@ -52,6 +52,27 @@ back_wall:translate(room_width/2.0-3, room_height/2.0-1.0, 0)
 back_wall:rotate('x', -90.0)
 back_wall:scale(room_width+5, 1.0, room_width+5)
 
+-- right wall 2
+--right_wall2 = gr.plane('right_wall2')
+--room:add_child(right_wall2)
+--right_wall2:set_material(red_cornell)
+--right_wall2:set_texture('textures/brickwork.png')
+--right_wall2:set_bumpmap('bumps/brickwork-bump.png', 0.05)
+--right_wall2:translate(-room_width/2.0+1, room_height/2.0-1.0, -room_width)
+--right_wall2:rotate('y', -90)
+--right_wall2:rotate('x', -90)
+--right_wall2:scale(room_width+5, 1.0, room_width+5)
+
+-- back wall 2
+--back_wall2 = gr.plane('back_wall2')
+--room:add_child(back_wall2)
+--back_wall2:set_material(white_cornell)
+--back_wall2:set_texture('textures/brickwork.png')
+--back_wall2:set_bumpmap('bumps/brickwork-bump.png', 0.05)
+--back_wall2:translate(room_width*2-3, room_height/2.0-1.0, 0)
+--back_wall2:rotate('x', -90.0)
+--back_wall2:scale(room_width+5, 1.0, room_width+5)
+
 scene:rotate('y', 25.0)
 
 -- lights
@@ -61,9 +82,16 @@ light_color_2 = {0.780131/2, 0.780409/2, 0.775833/2}
 light1 = gr.disc_light({0, room_height - 3.0, -3}, light_color, {1, 0, 0}, {0.0, -1.0, 0.0}, 5.0)
 light2 = gr.disc_light({-2.0, room_height - 3.0, -3}, light_color_2, {1, 0, 0}, {0.0, 0.0, 1.0}, 1.0)
 
-gr.render(scene,
-	  'refract.png', 512, 512,
-	  {0, room_height/2.0-2, -room_length/2.0 - 5}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
-	  {0.2,0.2,0.2}, {light1},
-    4, 4, 4, 1)
+--gr.render(scene,
+--	  'refract.png', 512, 512,
+--	  {0, room_height/2.0-2, -room_length/2.0 - 5}, {0, -room_height/2.0, 30}, {0, 1, 0}, 50,
+--	  {0.2,0.2,0.2}, {light1},
+--    4, 4, 4, 1)
+
+-- wide
+--gr.render(scene,
+--	  'refract.2048.512.png', 2048, 512,
+--	  {0, room_height/2.0-2, -room_length/2.0 - 5}, {0, -room_height/2.0, 30}, {0, 1, 0}, 30,
+--	  {0.2,0.2,0.2}, {light1},
+--    4, 4, 4, 64)
 
