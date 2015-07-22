@@ -91,7 +91,7 @@ double Perlin::marble(double x, double y, double z)
   return sin(x + turbulence(x, y, z));
 }
 
-double Perlin:wood(double x, double y, double z)
+double Perlin::wood(double x, double y, double z)
 {
   double grain = Perlin::noise(x, y, z) * 20;
   return (grain - (int)grain);
