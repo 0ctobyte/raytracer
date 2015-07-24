@@ -9,8 +9,9 @@ the ray tracer!
 ## Build & Usage
 
 Run `make` in the src directory to compile the program.
+
 To run the program (`<scene>` is the lua scene file):
-`./rt <scene>.lua
+`./rt <scene>.lua`
 
 ## Features
 * Standard Primitives
