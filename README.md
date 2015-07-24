@@ -6,6 +6,12 @@ This was written for a project for the CS 488 course at the University of Waterl
 Check out the [site](http://0ctobyte.github.io/raytracer/) to see some of the images rendered with
 the ray tracer!
 
+## Build & Usage
+
+Run `make` in the src directory to compile the program.
+To run the program (`<scene>` is the lua scene file):
+`./rt <scene>.lua
+
 ## Features
 * Standard Primitives
   - Sphere
